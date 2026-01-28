@@ -10,6 +10,14 @@ const User = sequelize.define(
       primaryKey: true,
       defaultValue: () => generateObjectId(),
     },
+    first_name: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    last_name: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -17,6 +25,10 @@ const User = sequelize.define(
       validate: {
         isEmail: true,
       },
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     password: {
       type: DataTypes.STRING,
@@ -27,16 +39,8 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: "user",
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    phone: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     address: {
-      type: DataTypes.STRING,
+      type: DataTypes.JSON,
       allowNull: true,
     },
     profile: {
