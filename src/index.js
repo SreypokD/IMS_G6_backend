@@ -5,6 +5,8 @@ require("./models/init");
 require("dotenv").config({ path: "./environments/.env" });
 
 const app = express();
+const path = require("path");
+
 app.use(
   cors({
     origin: [
@@ -27,6 +29,7 @@ const orderRequestRoutes = require("./routes/orderRequests");
 const reportingRoutes = require("./routes/reporting");
 const permissionRoutes = require("./routes/permissions");
 const userRoutes = require("./routes/users");
+const uploadRoutes = require("./routes/upload");
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -37,11 +40,15 @@ app.use("/api/order-requests", orderRequestRoutes);
 app.use("/api/reporting", reportingRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Health check
 app.get("/", (req, res) => {
   res.json({ message: "IMS-G6 Backend is running." });
 });
+
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // Start server after DB connection
 const PORT = process.env.PORT || 5001;
