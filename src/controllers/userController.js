@@ -35,7 +35,31 @@ exports.create = async (req, res) => {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
-    const user = await User.create(req.body);
+    const bcrypt = require("bcryptjs");
+    const data = { ...req.body };
+    // Sanitize address if present and is object
+    if (data.address && typeof data.address === "object" && !Array.isArray(data.address)) {
+      data.address = {
+        street: data.address.street || "",
+        house: data.address.house || "",
+        village: data.address.village || "",
+        commune: data.address.commune || "",
+        district: data.address.district || "",
+        province: data.address.province || "",
+        country: data.address.country || "",
+      };
+    }
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+    // Check if email already exists
+    const existing = await User.findOne({ where: { email: data.email } });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ success: false, error: "Email already exists" });
+    }
+    const user = await User.create(data);
     res.status(201).json({ success: true, data: user });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -46,7 +70,36 @@ exports.update = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ error: "Not found" });
-    await user.update(req.body);
+    // Only allow updating specific fields
+    const allowedFields = [
+      "email",
+      "password",
+      "role",
+      "first_name",
+      "last_name",
+      "phone",
+      "address",
+      "profile",
+    ];
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        if (key === "address" && typeof req.body.address === "object" && !Array.isArray(req.body.address)) {
+          updateData.address = {
+            street: req.body.address.street || "",
+            house: req.body.address.house || "",
+            village: req.body.address.village || "",
+            commune: req.body.address.commune || "",
+            district: req.body.address.district || "",
+            province: req.body.address.province || "",
+            country: req.body.address.country || "",
+          };
+        } else {
+          updateData[key] = req.body[key];
+        }
+      }
+    }
+    await user.update(updateData);
     res.json({ success: true, data: user });
   } catch (err) {
     res.status(400).json({ error: err.message });
