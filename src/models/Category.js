@@ -11,6 +11,7 @@ const Category = sequelize.define(
       defaultValue: () => generateObjectId(),
     },
     name: { type: DataTypes.STRING, allowNull: false, unique: true },
+    description: { type: DataTypes.STRING, allowNull: true },
   },
   { timestamps: true },
 );

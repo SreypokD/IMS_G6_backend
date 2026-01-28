@@ -7,14 +7,33 @@ exports.getAll = async (req, res) => {
     const offset = (page - 1) * limit;
     const totalItems = await Supplier.count();
     const totalPages = Math.ceil(totalItems / limit);
+    const Product = require("../models/Product");
     const suppliers = await Supplier.findAll({
       limit,
       offset,
       order: [["_id", "ASC"]],
+      include: [
+        {
+          model: Product,
+          attributes: [], // don't include product details, just count
+        },
+      ],
     });
+
+    // For each supplier, count products
+    const suppliersWithCount = await Promise.all(
+      suppliers.map(async (supplier) => {
+        const count = await supplier.countProducts();
+        return {
+          ...supplier.toJSON(),
+          products_count: count,
+        };
+      })
+    );
+
     res.json({
       success: true,
-      data: suppliers,
+      data: suppliersWithCount,
       pagination: { page, limit, totalItems, totalPages },
     });
   } catch (err) {

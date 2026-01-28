@@ -132,7 +132,7 @@ async function seed() {
       province: "Phnom Penh",
       country: "Cambodia",
     },
-    profile: "https://randomuser.me/api/portraits/men/1.jpg",
+    profile: null,
     permissionId: adminPermission._id,
   });
   await User.create({
@@ -151,7 +151,7 @@ async function seed() {
       province: "Phnom Penh",
       country: "Cambodia",
     },
-    profile: "https://randomuser.me/api/portraits/women/2.jpg",
+    profile: null,
     permissionId: staffPermission._id,
   });
 
