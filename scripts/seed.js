@@ -5,6 +5,7 @@ const {
   Product,
   Category,
   Supplier,
+  Permission,
 } = require("../src/models/associations");
 const bcrypt = require("bcryptjs");
 
@@ -58,25 +59,10 @@ async function seed() {
     },
   ]);
 
-  // Seed users (now using email and more info)
-  const password = await bcrypt.hash("admin123", 10);
-  await User.create({
-    email: "admin@example.com",
-    password,
-    role: "admin",
-    first_name: "Admin",
-    last_name: "User",
-    phone: "0123456789",
-    address: {
-      street: "Main Street",
-      house: "123",
-      village: "Old Market Area",
-      commune: "Boeng Keng Kang",
-      district: "Chamkar Mon",
-      province: "Phnom Penh",
-      country: "Cambodia",
-    },
-    profile: "https://randomuser.me/api/portraits/men/1.jpg",
+  // Seed permissions (roles)
+  const adminPermission = await Permission.create({
+    name: "Admin",
+    description: "Manage everything",
     permissions: [
       "view_dashboard",
       "view_product",
@@ -96,6 +82,10 @@ async function seed() {
       "update_order_request",
       "delete_order_request",
       "post_order_request",
+      "view_approve_request",
+      "update_approve_request",
+      "view_confirm_delivery",
+      "update_confirm_delivery",
       "view_stock",
       "view_report",
       "view_permission",
@@ -107,6 +97,43 @@ async function seed() {
       "update_user",
       "delete_user",
     ],
+  });
+
+  const staffPermission = await Permission.create({
+    name: "Staff",
+    description: "Limited access",
+    permissions: [
+      "view_dashboard",
+      "view_category",
+      "view_supplier",
+      "view_order_request",
+      "create_order_request",
+      "update_order_request",
+      "delete_order_request",
+      "view_report",
+    ],
+  });
+
+  // Seed users (now using permissionId)
+  const password = await bcrypt.hash("admin123", 10);
+  await User.create({
+    email: "admin@example.com",
+    password,
+    role: "admin",
+    first_name: "Admin",
+    last_name: "User",
+    phone: "0123456789",
+    address: {
+      street: "Main Street",
+      house: "123",
+      village: "Old Market Area",
+      commune: "Boeng Keng Kang",
+      district: "Chamkar Mon",
+      province: "Phnom Penh",
+      country: "Cambodia",
+    },
+    profile: "https://randomuser.me/api/portraits/men/1.jpg",
+    permissionId: adminPermission._id,
   });
   await User.create({
     email: "staff@example.com",
@@ -125,16 +152,7 @@ async function seed() {
       country: "Cambodia",
     },
     profile: "https://randomuser.me/api/portraits/women/2.jpg",
-    permissions: [
-      "view_dashboard",
-      "view_category",
-      "view_supplier",
-      "view_order_request",
-      "create_order_request",
-      "update_order_request",
-      "delete_order_request",
-      "view_report",
-    ],
+    permissionId: staffPermission._id,
   });
 
   console.log("Database seeded!");

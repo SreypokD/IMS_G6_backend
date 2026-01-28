@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("./index");
-
 const { generateObjectId } = require("../utils/objectId.util");
+
 const User = sequelize.define(
   "User",
   {
@@ -47,19 +47,12 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    permissions: {
-      type: DataTypes.JSON,
-      allowNull: false,
-      defaultValue: ["view_dashboard"],
-      validate: {
-        isArrayOfStrings(value) {
-          if (
-            !Array.isArray(value) ||
-            !value.every((v) => typeof v === "string")
-          ) {
-            throw new Error("Permissions must be an array of strings");
-          }
-        },
+    permissionId: {
+      type: DataTypes.STRING(24),
+      allowNull: true,
+      references: {
+        model: "Permissions",
+        key: "_id",
       },
     },
   },

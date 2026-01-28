@@ -7,7 +7,7 @@ const { validateSupplier } = require('../middleware/supplierValidator');
 
 router.get('/', authenticateToken, supplierController.getAll);
 router.post('/', authenticateToken, validateSupplier, supplierController.create);
-router.put('/:id', authenticateToken, supplierController.update);
+router.patch('/:id', authenticateToken, supplierController.update);
 router.delete('/:id', authenticateToken, supplierController.remove);
 
 module.exports = router;

@@ -1,11 +1,6 @@
-// Stateless logout for JWT
-exports.logout = (req, res) => {
-  // Remove refresh token if provided
-  const { refresh_token } = req.body;
-  if (refresh_token) refreshTokens.delete(refresh_token);
-  res.json({ success: true, data: { message: "Logged out" } });
-};
+const Permission = require("../models/Permission");
 const User = require("../models/User");
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const REFRESH_SECRET =
@@ -14,19 +9,31 @@ const refreshTokens = new Set(); // In-memory store for demo; use DB/Redis in pr
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password, role, permissionId } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password: hashedPassword, role });
+    // Assign permissionId if provided
+    const user = await User.create({
+      email,
+      password: hashedPassword,
+      role,
+      permissionId,
+    });
+    // Fetch user with permission (role) object
+    const userWithPermission = await User.findByPk(user._id, {
+      include: [{ model: Permission, as: "permission" }],
+    });
     res.status(201).json({
       success: true,
       data: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        permissions: user.permissions,
-        profile: user.profile,
+        id: userWithPermission._id,
+        email: userWithPermission.email,
+        role: userWithPermission.role,
+        first_name: userWithPermission.first_name,
+        last_name: userWithPermission.last_name,
+        permissions: userWithPermission.permission
+          ? userWithPermission.permission.permissions
+          : [],
+        profile: userWithPermission.profile,
       },
     });
   } catch (err) {
@@ -37,7 +44,11 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+    // Fetch user with permission (role) object
+    const user = await User.findOne({
+      where: { email },
+      include: [{ model: Permission, as: "permission" }],
+    });
     if (!user)
       return res
         .status(400)
@@ -47,6 +58,7 @@ exports.login = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, error: "Invalid credentials" });
+    const permissions = user.permission ? user.permission.permissions : [];
     const access_token = jwt.sign(
       {
         id: user._id,
@@ -54,9 +66,7 @@ exports.login = async (req, res) => {
         role: user.role,
         first_name: user.first_name,
         last_name: user.last_name,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        permissions: user.permissions,
+        permissions,
         profile: user.profile,
       },
       process.env.JWT_SECRET,
@@ -69,7 +79,7 @@ exports.login = async (req, res) => {
         role: user.role,
         first_name: user.first_name,
         last_name: user.last_name,
-        permissions: user.permissions,
+        permissions,
         profile: user.profile,
       },
       REFRESH_SECRET,
@@ -82,6 +92,14 @@ exports.login = async (req, res) => {
   }
 };
 
+// Stateless logout for JWT
+exports.logout = (req, res) => {
+  // Remove refresh token if provided
+  const { refresh_token } = req.body;
+  if (refresh_token) refreshTokens.delete(refresh_token);
+  res.json({ success: true, data: { message: "Logged out" } });
+};
+
 exports.refresh = (req, res) => {
   const { refresh_token } = req.body;
   if (!refresh_token || !refreshTokens.has(refresh_token)) {
@@ -91,6 +109,7 @@ exports.refresh = (req, res) => {
   }
   try {
     const payload = jwt.verify(refresh_token, REFRESH_SECRET);
+    const permissions = payload.permissions || [];
     const access_token = jwt.sign(
       {
         id: payload.id,
@@ -98,9 +117,7 @@ exports.refresh = (req, res) => {
         role: payload.role,
         first_name: payload.first_name,
         last_name: payload.last_name,
-        first_name: payload.first_name,
-        last_name: payload.last_name,
-        permissions: payload.permissions,
+        permissions,
         profile: payload.profile,
       },
       process.env.JWT_SECRET,
@@ -124,13 +141,11 @@ exports.profile = async (req, res) => {
         "role",
         "first_name",
         "last_name",
-        "first_name",
-        "last_name",
-        "permissions",
         "profile",
         "createdAt",
         "updatedAt",
       ],
+      include: [{ model: Permission, as: "permission" }],
     });
     if (!user)
       return res.status(404).json({ success: false, error: "User not found" });

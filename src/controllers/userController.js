@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const { Permission } = require("../models/Permission");
 
 exports.getAll = async (req, res) => {
   try {
@@ -23,7 +24,9 @@ exports.getAll = async (req, res) => {
 };
 
 exports.getOne = async (req, res) => {
-  const user = await User.findByPk(req.params.id);
+  const user = await User.findByPk(req.params.id, {
+    include: [{ model: Permission, as: "permission" }],
+  });
   if (!user) return res.status(404).json({ error: "Not found" });
   res.json({ success: true, data: user });
 };
@@ -38,7 +41,11 @@ exports.create = async (req, res) => {
     const bcrypt = require("bcryptjs");
     const data = { ...req.body };
     // Sanitize address if present and is object
-    if (data.address && typeof data.address === "object" && !Array.isArray(data.address)) {
+    if (
+      data.address &&
+      typeof data.address === "object" &&
+      !Array.isArray(data.address)
+    ) {
       data.address = {
         street: data.address.street || "",
         house: data.address.house || "",
@@ -60,7 +67,11 @@ exports.create = async (req, res) => {
         .json({ success: false, error: "Email already exists" });
     }
     const user = await User.create(data);
-    res.status(201).json({ success: true, data: user });
+    // Fetch user with full permission objects
+    const userWithPermissions = await User.findByPk(user.id, {
+      include: [{ model: Permission, through: { attributes: [] } }],
+    });
+    res.status(201).json({ success: true, data: userWithPermissions });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -84,7 +95,11 @@ exports.update = async (req, res) => {
     const updateData = {};
     for (const key of allowedFields) {
       if (req.body[key] !== undefined) {
-        if (key === "address" && typeof req.body.address === "object" && !Array.isArray(req.body.address)) {
+        if (
+          key === "address" &&
+          typeof req.body.address === "object" &&
+          !Array.isArray(req.body.address)
+        ) {
           updateData.address = {
             street: req.body.address.street || "",
             house: req.body.address.house || "",
@@ -100,7 +115,11 @@ exports.update = async (req, res) => {
       }
     }
     await user.update(updateData);
-    res.json({ success: true, data: user });
+    // Fetch user with full permission objects
+    const userWithPermissions = await User.findByPk(user.id, {
+      include: [{ model: Permission, through: { attributes: [] } }],
+    });
+    res.json({ success: true, data: userWithPermissions });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

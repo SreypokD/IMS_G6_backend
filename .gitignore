@@ -21,3 +21,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Ignore uploaded files
+public/uploads/

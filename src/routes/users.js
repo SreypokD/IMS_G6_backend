@@ -1,19 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const userController = require("../controllers/userController");
+
 const checkPermission = require("../middleware/checkPermission");
 const authenticateToken = require("../middleware/auth");
-const {
-  getAll,
-  getOne,
-  create,
-  update,
-  remove,
-} = require("../controllers/userController");
 
-// User management routes
-router.get("/", authenticateToken, checkPermission("view_user"), getAll);
-router.post("/", authenticateToken, checkPermission("create_user"), create);
-router.get("/:id", authenticateToken, checkPermission("view_user"), getOne);
-router.put("/:id", authenticateToken, checkPermission("update_user"), update);
-router.delete("/:id", authenticateToken, checkPermission("delete_user"), remove);
+router.get("/", authenticateToken, checkPermission("view_user"), userController.getAll);
+router.post("/", authenticateToken, checkPermission("create_user"), userController.create);
+router.get("/:id", authenticateToken, checkPermission("view_user"), userController.getOne);
+router.patch("/:id", authenticateToken, checkPermission("update_user"), userController.update);
+router.delete("/:id", authenticateToken, checkPermission("delete_user"), userController.remove);
+
 module.exports = router;

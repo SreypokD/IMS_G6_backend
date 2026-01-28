@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("./index");
-
 const { generateObjectId } = require("../utils/objectId.util");
+
 const Supplier = sequelize.define(
   "Supplier",
   {
