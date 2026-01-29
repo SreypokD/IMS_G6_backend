@@ -22,6 +22,7 @@ const Product = sequelize.define(
     subcategory: { type: DataTypes.STRING },
     image: { type: DataTypes.STRING },
     stock: { type: DataTypes.INTEGER, defaultValue: 0 },
+    reserved_stock: { type: DataTypes.INTEGER, defaultValue: 0 },
   },
   { timestamps: true },
 );

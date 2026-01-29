@@ -11,18 +11,16 @@ const Supplier = sequelize.define(
       defaultValue: () => generateObjectId(),
     },
     company_name: { type: DataTypes.STRING, allowNull: false },
-    location: { type: DataTypes.STRING, allowNull: false},
-    contact_person: { type: DataTypes.STRING ,allowNull: false },
-    contact_position: { type: DataTypes.STRING , allowNull: false },
-    contact_email: { type: DataTypes.STRING , allowNull: true},
+    location: { type: DataTypes.STRING, allowNull: false },
+    contact_person: { type: DataTypes.STRING, allowNull: false },
+    contact_position: { type: DataTypes.STRING, allowNull: false },
+    contact_email: { type: DataTypes.STRING, allowNull: true },
     contact_phone: { type: DataTypes.STRING, allowNull: false },
-    address: { type: DataTypes.JSON , allowNull: false},
-    payment_term: { type: DataTypes.STRING ,allowNull: false },
+    address: { type: DataTypes.JSON, allowNull: true },
+    payment_term: { type: DataTypes.STRING, allowNull: false },
     status: { type: DataTypes.STRING, allowNull: false },
-    
   },
   { timestamps: true },
 );
 
 module.exports = Supplier;
-

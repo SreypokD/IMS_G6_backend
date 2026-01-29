@@ -10,7 +10,7 @@ Node.js backend for Inventory Management System (Group 6) using Express, Sequeli
 
 1. **Clone the repository**
    ```sh
-   git clone <repo-url>
+   git clone "https://github.com/SreypokD/IMS_G6_backend"
    cd IMS_G6_backend
    ```
 2. **Copy environment file**
@@ -60,7 +60,7 @@ Node.js backend for Inventory Management System (Group 6) using Express, Sequeli
 - Secure password hashing (bcrypt)
 
 ## Role & Permission Model
-- Each user is assigned a single Permission (role) via `permissionId`.
+- Each user is assigned a single Permission (role) via `permission_id`.
 - The Permission model contains a `permissions` array (e.g., `['view_dashboard', 'create_user']`).
 - All access control is enforced via middleware using this array.
 - To add new roles/permissions, update the Permission table and assign users accordingly.

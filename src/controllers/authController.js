@@ -9,14 +9,14 @@ const refreshTokens = new Set(); // In-memory store for demo; use DB/Redis in pr
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, role, permissionId } = req.body;
+    const { email, password, role, permission_id } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Assign permissionId if provided
+    // Assign permission_id if provided
     const user = await User.create({
       email,
       password: hashedPassword,
       role,
-      permissionId,
+      permission_id,
     });
     // Fetch user with permission (role) object
     const userWithPermission = await User.findByPk(user._id, {

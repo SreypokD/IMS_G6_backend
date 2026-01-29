@@ -12,6 +12,11 @@ const OrderRequest = sequelize.define(
     },
     quantity: { type: DataTypes.INTEGER, allowNull: false },
     status: { type: DataTypes.STRING, defaultValue: "pending" },
+    requested_date: { type: DataTypes.DATE },
+    notes: { type: DataTypes.STRING },
+    admin_remarks: { type: DataTypes.STRING },
+    rejection_reason: { type: DataTypes.STRING },
+    notified: { type: DataTypes.BOOLEAN, defaultValue: false },
   },
   { timestamps: true },
 );

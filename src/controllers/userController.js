@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const { Permission } = require("../models/Permission");
 
+// Get all users
 exports.getAll = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
@@ -23,6 +24,7 @@ exports.getAll = async (req, res) => {
   }
 };
 
+// Get a single user
 exports.getOne = async (req, res) => {
   const user = await User.findByPk(req.params.id, {
     include: [{ model: Permission, as: "permission" }],
@@ -31,6 +33,7 @@ exports.getOne = async (req, res) => {
   res.json({ success: true, data: user });
 };
 
+// Create a user
 exports.create = async (req, res) => {
   const { validationResult } = require("express-validator");
   const errors = validationResult(req);
@@ -77,6 +80,7 @@ exports.create = async (req, res) => {
   }
 };
 
+// Update a user
 exports.update = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
@@ -125,6 +129,7 @@ exports.update = async (req, res) => {
   }
 };
 
+// Delete a user
 exports.remove = async (req, res) => {
   const user = await User.findByPk(req.params.id);
   if (!user) return res.status(404).json({ error: "Not found" });

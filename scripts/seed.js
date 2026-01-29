@@ -21,8 +21,44 @@ async function seed() {
 
   // Seed suppliers
   const suppliers = await Supplier.bulkCreate([
-    { name: "Acme Corp", contact: "acme@example.com" },
-    { name: "Global Supplies", contact: "global@example.com" },
+    {
+      company_name: "Acme Corp",
+      location: "Phnom Penh",
+      contact_person: "John Doe",
+      contact_position: "Manager",
+      contact_email: "acme@example.com",
+      contact_phone: "0123456789",
+      address: {
+        street: "Main St",
+        house: "123",
+        village: "Central",
+        commune: "Boeng Keng Kang",
+        district: "Chamkar Mon",
+        province: "Phnom Penh",
+        country: "Cambodia",
+      },
+      payment_term: "Net 30",
+      status: "Active",
+    },
+    {
+      company_name: "Global Supplies",
+      location: "Siem Reap",
+      contact_person: "Jane Smith",
+      contact_position: "Sales",
+      contact_email: "global@example.com",
+      contact_phone: "0987654321",
+      address: {
+        street: "Market Rd",
+        house: "456",
+        village: "Old Market",
+        commune: "Svay Dangkum",
+        district: "Siem Reap",
+        province: "Siem Reap",
+        country: "Cambodia",
+      },
+      payment_term: "Net 60",
+      status: "Active",
+    },
   ]);
 
   // Seed products
@@ -35,7 +71,7 @@ async function seed() {
       price: 1200,
       category: "Electronics",
       CategoryId: categories[0]._id,
-      SupplierId: suppliers[0]._id,
+      supplier_id: suppliers[0]._id,
     },
     {
       code: "P002",
@@ -45,7 +81,7 @@ async function seed() {
       price: 150,
       category: "Furniture",
       CategoryId: categories[2]._id,
-      SupplierId: suppliers[1]._id,
+      supplier_id: suppliers[1]._id,
     },
     {
       code: "P003",
@@ -55,7 +91,7 @@ async function seed() {
       price: 2,
       category: "Stationery",
       CategoryId: categories[1]._id,
-      SupplierId: suppliers[1]._id,
+      supplier_id: suppliers[1]._id,
     },
   ]);
 
@@ -64,38 +100,72 @@ async function seed() {
     name: "Admin",
     description: "Manage everything",
     permissions: [
+      // Dashboard
       "view_dashboard",
-      "view_product",
-      "create_product",
-      "update_product",
-      "delete_product",
+
+      // Categories
       "view_category",
       "create_category",
       "update_category",
       "delete_category",
+
+      // Products
+      "view_product",
+      "create_product",
+      "update_product",
+      "delete_product",
+
+      // Suppliers
       "view_supplier",
       "create_supplier",
       "update_supplier",
       "delete_supplier",
+
+      // Stocks
+      "view_stock",
+      "create_stock",
+      "update_stock",
+      "delete_stock",
+
+      // Order Requests (Purchase)
       "view_order_request",
       "create_order_request",
       "update_order_request",
       "delete_order_request",
       "post_order_request",
+
+      // Approvals
       "view_approve_request",
       "update_approve_request",
+
+      // Confirm Delivery
       "view_confirm_delivery",
       "update_confirm_delivery",
-      "view_stock",
+
+      // Sales
+      "view_sale",
+      "create_sale",
+      "update_sale",
+      "delete_sale",
+
+      // Order History
+      "view_order_history",
+
+      // Reports & Logs
       "view_report",
-      "view_permission",
-      "create_permission",
-      "update_permission",
-      "delete_permission",
+      "view_activity_log",
+
+      // Users
       "view_user",
       "create_user",
       "update_user",
       "delete_user",
+
+      // Permissions
+      "view_permission",
+      "create_permission",
+      "update_permission",
+      "delete_permission",
     ],
   });
 
@@ -103,18 +173,40 @@ async function seed() {
     name: "Staff",
     description: "Limited access",
     permissions: [
+      // Dashboard
       "view_dashboard",
+
+      // Master Data (read-only)
       "view_category",
+      "view_product",
       "view_supplier",
+
+      // Stock (read-only)
+      "view_stock",
+
+      // Purchasing
       "view_order_request",
       "create_order_request",
       "update_order_request",
       "delete_order_request",
+      "post_order_request",
+
+      // Sales
+      "view_sale",
+      "create_sale",
+      "update_sale",
+      "delete_sale",
+
+      // History & Reports
+      "view_order_history",
       "view_report",
+
+      // Logs
+      "view_activity_log",
     ],
   });
 
-  // Seed users (now using permissionId)
+  // Seed users
   const password = await bcrypt.hash("admin123", 10);
   await User.create({
     email: "admin@example.com",
@@ -133,7 +225,7 @@ async function seed() {
       country: "Cambodia",
     },
     profile: null,
-    permissionId: adminPermission._id,
+    permission_id: adminPermission._id,
   });
   await User.create({
     email: "staff@example.com",
@@ -152,7 +244,7 @@ async function seed() {
       country: "Cambodia",
     },
     profile: null,
-    permissionId: staffPermission._id,
+    permission_id: staffPermission._id,
   });
 
   console.log("Database seeded!");

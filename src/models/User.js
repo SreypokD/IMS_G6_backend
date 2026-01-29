@@ -47,7 +47,7 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    permissionId: {
+    permission_id: {
       type: DataTypes.STRING(24),
       allowNull: true,
       references: {

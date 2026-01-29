@@ -2,10 +2,10 @@
 const { body } = require('express-validator');
 
 const validateOrderRequest = [
-  body('productId').isInt().withMessage('Product ID must be an integer'),
+  body('product_id').isInt().withMessage('Product ID must be an integer'),
   body('quantity').isInt({ min: 1 }).withMessage('Quantity must be a positive integer'),
-  body('supplierId').isInt().withMessage('Supplier ID must be an integer'),
-  body('requestedBy').isString().trim().notEmpty().withMessage('RequestedBy is required'),
+  body('supplier_id').isInt().withMessage('Supplier ID must be an integer'),
+  body('requested_by').isString().trim().notEmpty().withMessage('requested_by is required'),
 ];
 
 module.exports = {

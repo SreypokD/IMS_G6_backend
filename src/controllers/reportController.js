@@ -1,6 +1,7 @@
+const { Op } = require("sequelize");
 const Product = require("../models/Product");
 const OrderRequest = require("../models/OrderRequest");
-const { Op } = require("sequelize");
+const ActivityLog = require("../models/ActivityLog");
 
 exports.inventorySummary = async (req, res) => {
   const products = await Product.findAll();
@@ -26,4 +27,19 @@ exports.orderStats = async (req, res) => {
     where: { ...where, status: "rejected" },
   });
   res.json({ totalOrders, pending, approved, rejected });
+};
+
+// Fetch activity logs for report
+exports.activityLogs = async (req, res) => {
+  try {
+    const logs = await ActivityLog.findAll({
+      order: [["createdAt", "DESC"]],
+      limit: 100,
+    });
+    res.json({ success: true, data: logs });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch activity logs" });
+  }
 };

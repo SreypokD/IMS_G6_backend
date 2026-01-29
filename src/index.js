@@ -26,10 +26,13 @@ const productRoutes = require("./routes/products");
 const categoryRoutes = require("./routes/categories");
 const supplierRoutes = require("./routes/suppliers");
 const orderRequestRoutes = require("./routes/orderRequests");
-const reportingRoutes = require("./routes/reporting");
+const reportsRoutes = require("./routes/reports");
 const permissionRoutes = require("./routes/permissions");
 const userRoutes = require("./routes/users");
 const uploadRoutes = require("./routes/upload");
+const approveRequestsRoutes = require("./routes/approveRequests");
+const confirmDeliveriesRoutes = require("./routes/confirmDeliveries");
+const salesRoutes = require("./routes/sales");
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -37,7 +40,10 @@ app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api/order-requests", orderRequestRoutes);
-app.use("/api/reporting", reportingRoutes);
+app.use("/api/approve-requests", approveRequestsRoutes);
+app.use("/api/confirm-deliveries", confirmDeliveriesRoutes);
+app.use("/api/sales", salesRoutes);
+app.use("/api/reports", reportsRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRoutes);

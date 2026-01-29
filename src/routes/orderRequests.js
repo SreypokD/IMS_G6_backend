@@ -8,5 +8,6 @@ const { validateOrderRequest } = require('../middleware/orderRequestValidator');
 router.get('/', authenticateToken, orderRequestController.getAll);
 router.post('/', authenticateToken, validateOrderRequest, orderRequestController.create);
 router.patch('/:id/status', authenticateToken, orderRequestController.updateStatus);
+router.patch('/:id/cancel', authenticateToken, orderRequestController.cancelOrderRequest);
 
 module.exports = router;
