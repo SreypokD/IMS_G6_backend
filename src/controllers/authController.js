@@ -102,10 +102,10 @@ exports.logout = (req, res) => {
 
 exports.refresh = (req, res) => {
   const { refresh_token } = req.body;
-  if (!refresh_token || !refreshTokens.has(refresh_token)) {
+  if (!refresh_token) {
     return res
       .status(401)
-      .json({ success: false, error: "Invalid refresh token" });
+      .json({ success: false, error: "No refresh token provided" });
   }
   try {
     const payload = jwt.verify(refresh_token, REFRESH_SECRET);

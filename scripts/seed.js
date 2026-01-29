@@ -95,7 +95,8 @@ async function seed() {
     },
   ]);
 
-  // Seed permissions (roles)
+  // Seed permissions
+  // Admin permission (full access)
   const adminPermission = await Permission.create({
     name: "Admin",
     description: "Manage everything",
@@ -169,6 +170,7 @@ async function seed() {
     ],
   });
 
+  // Staff permission (limited access)
   const staffPermission = await Permission.create({
     name: "Staff",
     description: "Limited access",
@@ -206,8 +208,32 @@ async function seed() {
     ],
   });
 
+  // Customer permission (minimal access)
+  const customerPermission = await Permission.create({
+    name: "Customer",
+    description: "Customer access",
+    permissions: [
+      // Dashboard
+      "view_dashboard",
+
+      // Master Data (read-only)
+      "view_product",
+      "view_category",
+      "view_supplier",
+
+      // Purchasing
+      "view_order_request",
+      "create_order_request",
+
+      // History
+      "view_order_history",
+    ],
+  });
+
   // Seed users
   const password = await bcrypt.hash("admin123", 10);
+
+  // Seed admin user
   await User.create({
     email: "admin@example.com",
     password,
@@ -227,6 +253,8 @@ async function seed() {
     profile: null,
     permission_id: adminPermission._id,
   });
+
+  // Seed staff user
   await User.create({
     email: "staff@example.com",
     password,
@@ -245,6 +273,28 @@ async function seed() {
     },
     profile: null,
     permission_id: staffPermission._id,
+  });
+
+  // Seed customer user
+  const customerPassword = await bcrypt.hash("customer123", 10);
+  await User.create({
+    email: "customer@example.com",
+    password: customerPassword,
+    role: "customer",
+    first_name: "Customer",
+    last_name: "User",
+    phone: "011223344",
+    address: {
+      street: "Customer Street",
+      house: "789",
+      village: "Customer Village",
+      commune: "Customer Commune",
+      district: "Customer District",
+      province: "Phnom Penh",
+      country: "Cambodia",
+    },
+    profile: null,
+    permission_id: customerPermission._id,
   });
 
   console.log("Database seeded!");
