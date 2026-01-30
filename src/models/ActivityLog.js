@@ -10,13 +10,20 @@ const ActivityLog = sequelize.define(
       primaryKey: true,
       defaultValue: () => generateObjectId(),
     },
-    user_id: { type: DataTypes.STRING(24), allowNull: false },
+    user_id: {
+      type: DataTypes.STRING(24),
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "_id",
+      },
+    },
     action: { type: DataTypes.STRING, allowNull: false },
     details: { type: DataTypes.TEXT },
     entity_type: { type: DataTypes.STRING },
     entity_id: { type: DataTypes.STRING(24) },
   },
-  { timestamps: true },
+  { timestamps: true, tableName: "activity_logs" },
 );
 
 module.exports = ActivityLog;

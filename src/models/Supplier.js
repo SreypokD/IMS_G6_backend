@@ -20,7 +20,7 @@ const Supplier = sequelize.define(
     payment_term: { type: DataTypes.STRING, allowNull: false },
     status: { type: DataTypes.STRING, allowNull: false },
   },
-  { timestamps: true },
+  { timestamps: true, tableName: "suppliers" },
 );
 
 module.exports = Supplier;

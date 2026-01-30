@@ -1,4 +1,5 @@
 const ActivityLog = require("../models/ActivityLog");
+const Notification = require("../models/Notification");
 const OrderRequest = require("../models/OrderRequest");
 const Sale = require("../models/Sale");
 const Product = require("../models/Product");
@@ -12,7 +13,10 @@ exports.getAll = async (req, res) => {
     const totalItems = await OrderRequest.count();
     const totalPages = Math.ceil(totalItems / limit);
     const orders = await OrderRequest.findAll({
-      include: [Product, { model: User, as: "requester" }],
+      include: [
+        { model: Product, as: "product" },
+        { model: User, as: "requester" },
+      ],
       limit,
       offset,
       order: [["_id", "ASC"]],
@@ -39,6 +43,7 @@ exports.create = async (req, res) => {
       requester_id: req.user._id,
       requested_date: req.body.requested_date,
       notes: req.body.notes,
+      status: "pending",
     });
     res.status(201).json({ success: true, data: order });
   } catch (err) {
@@ -50,10 +55,19 @@ exports.updateStatus = async (req, res) => {
   try {
     const order = await OrderRequest.findByPk(req.params.id);
     if (!order) return res.status(404).json({ error: "Not found" });
-    const { status, rejection_reason, admin_remarks } = req.body;
+    const {
+      status,
+      rejection_reason,
+      admin_remarks,
+      customer_remark,
+      delivery_date,
+    } = req.body;
     const user_id = req.user?._id || (req.user && req.user._id);
     if (status === "approved") {
       if (admin_remarks) order.admin_remarks = admin_remarks;
+      if (admin_remarks) order.admin_remark = admin_remarks;
+      order.approved_by = user_id;
+      order.approved_date = new Date();
       // Check available stock (not reserved)
       const product = await Product.findByPk(
         order.product_id || order.product_id,
@@ -87,7 +101,21 @@ exports.updateStatus = async (req, res) => {
         entity_type: "OrderRequest",
         entity_id: order._id,
       });
-      return res.json({ success: true, data: order, sale: sale });
+      // Notify requester
+      await Notification.create({
+        user_id: order.requester_id,
+        type: "order_approved",
+        message: `Your order request #${order._id} has been approved.`,
+        entity_type: "OrderRequest",
+        entity_id: order._id,
+      });
+      const orderRequest = await OrderRequest.findByPk(order._id, {
+        include: [
+          { model: Product, as: "product" },
+          { model: User, as: "requester" },
+        ],
+      });
+      return res.json({ success: true, data: orderRequest, sale: sale });
     } else if (status === "rejected") {
       if (admin_remarks) order.admin_remarks = admin_remarks;
       // Release reserved stock if previously approved
@@ -115,7 +143,21 @@ exports.updateStatus = async (req, res) => {
         entity_type: "OrderRequest",
         entity_id: order._id,
       });
-      return res.json({ success: true, data: order });
+      // Notify requester
+      await Notification.create({
+        user_id: order.requester_id,
+        type: "order_rejected",
+        message: `Your order request #${order._id} has been rejected. Reason: ${order.rejection_reason}`,
+        entity_type: "OrderRequest",
+        entity_id: order._id,
+      });
+      const orderRequest = await OrderRequest.findByPk(order._id, {
+        include: [
+          { model: Product, as: "product" },
+          { model: User, as: "requester" },
+        ],
+      });
+      return res.json({ success: true, data: orderRequest });
     } else if (status === "completed") {
       // Mark sales order as completed and deduct stock
       const sale = await Sale.findOne({
@@ -147,11 +189,71 @@ exports.updateStatus = async (req, res) => {
         entity_type: "OrderRequest",
         entity_id: order._id,
       });
-      return res.json({ success: true, data: order, sale });
+      // Notify requester
+      await Notification.create({
+        user_id: order.requester_id,
+        type: "order_completed",
+        message: `Your order request #${order._id} has been completed.`,
+        entity_type: "OrderRequest",
+        entity_id: order._id,
+      });
+      // Populate Product and requester
+      const populated = await OrderRequest.findByPk(order._id, {
+        include: [{ model: Product }, { model: User, as: "requester" }],
+      });
+
+      const o = populated.toJSON();
+      o.product = o.Product ? o.Product : null;
+      o.requester = o.requester ? o.requester : null;
+      delete o.Product;
+      return res.json({ success: true, data: o, sale });
+    } else if (status === "on_hold") {
+      order.status = "on_hold";
+      if (customer_remark) order.customer_remark = customer_remark;
+      if (delivery_date) order.delivery_date = delivery_date;
+      order.updated_by = user_id;
+      order.updated_at = new Date();
+      await order.save();
+      await ActivityLog.create({
+        user_id,
+        action: "hold_order_request",
+        details: `OrderRequest ${order._id} put on hold.`,
+        entity_type: "OrderRequest",
+        entity_id: order._id,
+      });
+      // Notify requester
+      await Notification.create({
+        user_id: order.requester_id,
+        type: "order_on_hold",
+        message: `Your order request #${order._id} is on hold.`,
+        entity_type: "OrderRequest",
+        entity_id: order._id,
+      });
+      // Populate Product and requester
+      const populated = await OrderRequest.findByPk(order._id, {
+        include: [{ model: Product }, { model: User, as: "requester" }],
+      });
+      const o = populated.toJSON();
+      o.product = o.Product ? o.Product : null;
+      o.requester = o.requester ? o.requester : null;
+      delete o.Product;
+      return res.json({ success: true, data: o });
     } else {
       // For other statuses, just update
       order.status = status;
+      if (customer_remark) order.customer_remark = customer_remark;
+      if (delivery_date) order.delivery_date = delivery_date;
+      order.updated_by = user_id;
+      order.updated_at = new Date();
       await order.save();
+      // Notify requester
+      await Notification.create({
+        user_id: order.requester_id,
+        type: `order_${status}`,
+        message: `Your order request #${order._id} status updated to ${status}.`,
+        entity_type: "OrderRequest",
+        entity_id: order._id,
+      });
       return res.json({ success: true, data: order });
     }
   } catch (err) {
@@ -182,7 +284,24 @@ exports.cancelOrderRequest = async (req, res) => {
       entity_type: "OrderRequest",
       entity_id: order._id,
     });
-    res.json({ success: true, data: order });
+    // Notify admin(s) - for demo, notify all admins (could be improved)
+    const admins = await User.findAll({ where: { role: "admin" } });
+    for (const admin of admins) {
+      await Notification.create({
+        user_id: admin._id,
+        type: "order_cancelled",
+        message: `Order request #${order._id} was cancelled by the customer`,
+        entity_type: "OrderRequest",
+        entity_id: order._id,
+      });
+    }
+    const orderRequest = await OrderRequest.findByPk(order._id, {
+      include: [
+        { model: Product, as: "product" },
+        { model: User, as: "requester" },
+      ],
+    });
+    res.json({ success: true, data: orderRequest });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -207,7 +326,22 @@ exports.confirmDelivery = async (req, res) => {
       entity_type: "OrderRequest",
       entity_id: order._id,
     });
-    res.json({ success: true, data: order });
+    // Notify requester
+    await Notification.create({
+      user_id: order.requester_id,
+      type: "order_delivered",
+      message: `Your order request #${order._id} has been delivered.`,
+      entity_type: "OrderRequest",
+      entity_id: order._id,
+    });
+    // Populate Product and requester
+    const orderRequest = await OrderRequest.findByPk(order._id, {
+      include: [
+        { model: Product, as: "product" },
+        { model: User, as: "requester" },
+      ],
+    });
+    res.json({ success: true, data: orderRequest });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

@@ -1,7 +1,8 @@
 const { Op } = require("sequelize");
+const User = require("../models/User");
 const Product = require("../models/Product");
-const OrderRequest = require("../models/OrderRequest");
 const ActivityLog = require("../models/ActivityLog");
+const OrderRequest = require("../models/OrderRequest");
 
 exports.inventorySummary = async (req, res) => {
   const products = await Product.findAll();
@@ -29,14 +30,28 @@ exports.orderStats = async (req, res) => {
   res.json({ totalOrders, pending, approved, rejected });
 };
 
-// Fetch activity logs for report
 exports.activityLogs = async (req, res) => {
   try {
+    // Parse pagination params
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    // Get total count
+    const totalItems = await ActivityLog.count();
+    const totalPages = Math.ceil(totalItems / limit);
+
     const logs = await ActivityLog.findAll({
-      order: [["createdAt", "DESC"]],
-      limit: 100,
+      include: [{ model: User, as: "user" }],
+      limit,
+      offset,
+      order: [["_id", "ASC"]],
     });
-    res.json({ success: true, data: logs });
+    res.json({
+      success: true,
+      data: logs,
+      pagination: { totalItems, totalPages, currentPage: page },
+    });
   } catch (err) {
     res
       .status(500)

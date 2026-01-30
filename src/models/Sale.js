@@ -14,7 +14,7 @@ const Sale = sequelize.define(
     status: { type: DataTypes.STRING, defaultValue: "processing" },
     completed_at: { type: DataTypes.DATE },
   },
-  { timestamps: true },
+  { timestamps: true, tableName: "sales" },
 );
 
 module.exports = Sale;

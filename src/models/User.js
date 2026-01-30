@@ -51,13 +51,14 @@ const User = sequelize.define(
       type: DataTypes.STRING(24),
       allowNull: true,
       references: {
-        model: "Permissions",
+        model: "permissions",
         key: "_id",
       },
     },
   },
   {
     timestamps: true,
+    tableName: "users",
   },
 );
 

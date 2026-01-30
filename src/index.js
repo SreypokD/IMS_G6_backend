@@ -33,8 +33,8 @@ const uploadRoutes = require("./routes/upload");
 const approveRequestsRoutes = require("./routes/approveRequests");
 const confirmDeliveriesRoutes = require("./routes/confirmDeliveries");
 const salesRoutes = require("./routes/sales");
+const notificationsRoutes = require("./routes/notifications");
 
-// Use routes
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -47,6 +47,7 @@ app.use("/api/reports", reportsRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 // Health check
 app.get("/", (req, res) => {

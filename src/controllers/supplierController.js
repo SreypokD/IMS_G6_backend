@@ -1,4 +1,5 @@
 const Supplier = require("../models/Supplier");
+const Product = require("../models/Product");
 
 exports.getAll = async (req, res) => {
   try {
@@ -7,7 +8,6 @@ exports.getAll = async (req, res) => {
     const offset = (page - 1) * limit;
     const totalItems = await Supplier.count();
     const totalPages = Math.ceil(totalItems / limit);
-    const Product = require("../models/Product");
     const suppliers = await Supplier.findAll({
       limit,
       offset,
@@ -15,6 +15,7 @@ exports.getAll = async (req, res) => {
       include: [
         {
           model: Product,
+          as: "products",
           attributes: [], // don't include product details, just count
         },
       ],
@@ -28,7 +29,7 @@ exports.getAll = async (req, res) => {
           ...supplier.toJSON(),
           products_count: count,
         };
-      })
+      }),
     );
 
     res.json({
