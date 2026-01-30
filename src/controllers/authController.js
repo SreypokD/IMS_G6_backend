@@ -25,14 +25,12 @@ exports.register = async (req, res) => {
     res.status(201).json({
       success: true,
       data: {
-        id: userWithPermission._id,
+        _id: userWithPermission._id,
         email: userWithPermission.email,
         role: userWithPermission.role,
         first_name: userWithPermission.first_name,
         last_name: userWithPermission.last_name,
-        permissions: userWithPermission.permission
-          ? userWithPermission.permission.permissions
-          : [],
+        permission: userWithPermission.permission,
         profile: userWithPermission.profile,
       },
     });
@@ -58,15 +56,14 @@ exports.login = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, error: "Invalid credentials" });
-    const permissions = user.permission ? user.permission.permissions : [];
     const access_token = jwt.sign(
       {
-        id: user._id,
+        _id: user._id,
         email: user.email,
         role: user.role,
         first_name: user.first_name,
         last_name: user.last_name,
-        permissions,
+        permission: user.permission,
         profile: user.profile,
       },
       process.env.JWT_SECRET,
@@ -74,12 +71,12 @@ exports.login = async (req, res) => {
     );
     const refresh_token = jwt.sign(
       {
-        id: user._id,
+        _id: user._id,
         email: user.email,
         role: user.role,
         first_name: user.first_name,
         last_name: user.last_name,
-        permissions,
+        permission: user.permission,
         profile: user.profile,
       },
       REFRESH_SECRET,
@@ -109,15 +106,15 @@ exports.refresh = (req, res) => {
   }
   try {
     const payload = jwt.verify(refresh_token, REFRESH_SECRET);
-    const permissions = payload.permissions || [];
+
     const access_token = jwt.sign(
       {
-        id: payload.id,
+        _id: payload._id,
         email: payload.email,
         role: payload.role,
         first_name: payload.first_name,
         last_name: payload.last_name,
-        permissions,
+        permission: payload.permission,
         profile: payload.profile,
       },
       process.env.JWT_SECRET,
@@ -134,7 +131,7 @@ exports.refresh = (req, res) => {
 exports.profile = async (req, res) => {
   try {
     // req.user is set by authenticateToken middleware
-    const user = await User.findByPk(req.user.id, {
+    const user = await User.findByPk(req.user._id, {
       attributes: [
         "_id",
         "email",

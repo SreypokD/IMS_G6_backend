@@ -154,6 +154,8 @@ async function seed() {
 
       // Reports & Logs
       "view_report",
+      "view_inventory_summary",
+      "view_order_stats",
       "view_activity_log",
 
       // Users

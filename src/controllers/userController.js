@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const { Permission } = require("../models/Permission");
+const Permission = require("../models/Permission");
 
 // Get all users
 exports.getAll = async (req, res) => {
@@ -71,8 +71,8 @@ exports.create = async (req, res) => {
     }
     const user = await User.create(data);
     // Fetch user with full permission objects
-    const userWithPermissions = await User.findByPk(user.id, {
-      include: [{ model: Permission, through: { attributes: [] } }],
+    const userWithPermissions = await User.findByPk(user._id, {
+      include: [{ model: Permission, as: "permission" }],
     });
     res.status(201).json({ success: true, data: userWithPermissions });
   } catch (err) {
@@ -120,8 +120,8 @@ exports.update = async (req, res) => {
     }
     await user.update(updateData);
     // Fetch user with full permission objects
-    const userWithPermissions = await User.findByPk(user.id, {
-      include: [{ model: Permission, through: { attributes: [] } }],
+    const userWithPermissions = await User.findByPk(user._id, {
+      include: [{ model: Permission, as: "permission" }],
     });
     res.json({ success: true, data: userWithPermissions });
   } catch (err) {

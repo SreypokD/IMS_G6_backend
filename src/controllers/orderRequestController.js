@@ -51,7 +51,7 @@ exports.updateStatus = async (req, res) => {
     const order = await OrderRequest.findByPk(req.params.id);
     if (!order) return res.status(404).json({ error: "Not found" });
     const { status, rejection_reason, admin_remarks } = req.body;
-    const user_id = req.user?._id || (req.user && req.user.id);
+    const user_id = req.user?._id || (req.user && req.user._id);
     if (status === "approved") {
       if (admin_remarks) order.admin_remarks = admin_remarks;
       // Check available stock (not reserved)
@@ -121,8 +121,7 @@ exports.updateStatus = async (req, res) => {
       const sale = await Sale.findOne({
         where: { order_request_id: order._id },
       });
-      if (!sale)
-        return res.status(404).json({ error: "Sales not found" });
+      if (!sale) return res.status(404).json({ error: "Sales not found" });
       const product = await Product.findByPk(
         order.product_id || order.product_id,
       );

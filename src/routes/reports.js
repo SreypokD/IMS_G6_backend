@@ -6,5 +6,5 @@ const authenticateToken = require('../middleware/auth');
 router.get('/inventory-summary', authenticateToken, reportController.inventorySummary);
 router.get('/order-stats', authenticateToken, reportController.orderStats);
 router.get('/activity-logs', authenticateToken, reportController.activityLogs);
-
+ 
 module.exports = router;
