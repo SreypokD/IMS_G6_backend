@@ -2,6 +2,7 @@ const Product = require("../models/Product");
 const Category = require("../models/Category");
 const Supplier = require("../models/Supplier");
 const { generateCode } = require("../utils/code.util");
+const { Op } = require("sequelize");
 
 exports.getAll = async (req, res) => {
   try {
@@ -58,12 +59,21 @@ exports.create = async (req, res) => {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
+    // Map frontend fields to DB fields
+    if (req.body.category) {
+      req.body.category_id = req.body.category;
+      delete req.body.category;
+    }
+    if (req.body.supplier) {
+      req.body.supplier_id = req.body.supplier;
+      delete req.body.supplier;
+    }
     // Auto-generate product code if not provided
     if (!req.body.code) {
       // Find the latest product code for this year
       const year = new Date().getFullYear().toString().slice(-2);
       const latest = await Product.findOne({
-        where: { code: { [Product.sequelize.Op.like]: `P${year}%` } },
+        where: { code: { [Op.like]: `P${year}%` } },
         order: [["code", "DESC"]],
       });
       let lastNumber = 0;
@@ -81,6 +91,15 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
+    // Map frontend fields to DB fields
+    if (req.body.category) {
+      req.body.category_id = req.body.category;
+      delete req.body.category;
+    }
+    if (req.body.supplier) {
+      req.body.supplier_id = req.body.supplier;
+      delete req.body.supplier;
+    }
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ error: "Not found" });
     await product.update(req.body);

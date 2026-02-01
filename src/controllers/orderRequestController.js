@@ -38,6 +38,10 @@ exports.create = async (req, res) => {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
+    if (req.body.supplier) {
+      req.body.supplier_id = req.body.supplier;
+      delete req.body.supplier;
+    }
     const order = await OrderRequest.create({
       ...req.body,
       requester_id: req.user._id,
@@ -113,9 +117,17 @@ exports.updateStatus = async (req, res) => {
         include: [
           { model: Product, as: "product" },
           { model: User, as: "requester" },
+          { model: User, as: "approvedBy", foreignKey: "approved_by" },
+          { model: User, as: "updatedBy", foreignKey: "updated_by" },
         ],
       });
-      return res.json({ success: true, data: orderRequest, sale: sale });
+      // Populate *_id fields as objects
+      const data = orderRequest.toJSON();
+      if (data.product) data.product_id = data.product;
+      if (data.requester) data.requester_id = data.requester;
+      if (data.approvedBy) data.approved_by = data.approvedBy;
+      if (data.updatedBy) data.updated_by = data.updatedBy;
+      return res.json({ success: true, data, sale: sale });
     } else if (status === "rejected") {
       if (admin_remarks) order.admin_remarks = admin_remarks;
       // Release reserved stock if previously approved
@@ -155,9 +167,16 @@ exports.updateStatus = async (req, res) => {
         include: [
           { model: Product, as: "product" },
           { model: User, as: "requester" },
+          { model: User, as: "approvedBy", foreignKey: "approved_by" },
+          { model: User, as: "updatedBy", foreignKey: "updated_by" },
         ],
       });
-      return res.json({ success: true, data: orderRequest });
+      const data = orderRequest.toJSON();
+      if (data.product) data.product_id = data.product;
+      if (data.requester) data.requester_id = data.requester;
+      if (data.approvedBy) data.approved_by = data.approvedBy;
+      if (data.updatedBy) data.updated_by = data.updatedBy;
+      return res.json({ success: true, data });
     } else if (status === "completed") {
       // Mark sales order as completed and deduct stock
       const sale = await Sale.findOne({
@@ -199,13 +218,18 @@ exports.updateStatus = async (req, res) => {
       });
       // Populate Product and requester
       const populated = await OrderRequest.findByPk(order._id, {
-        include: [{ model: Product }, { model: User, as: "requester" }],
+        include: [
+          { model: Product, as: "product" },
+          { model: User, as: "requester" },
+          { model: User, as: "approvedBy", foreignKey: "approved_by" },
+          { model: User, as: "updatedBy", foreignKey: "updated_by" },
+        ],
       });
-
       const o = populated.toJSON();
-      o.product = o.Product ? o.Product : null;
-      o.requester = o.requester ? o.requester : null;
-      delete o.Product;
+      if (o.product) o.product_id = o.product;
+      if (o.requester) o.requester_id = o.requester;
+      if (o.approvedBy) o.approved_by = o.approvedBy;
+      if (o.updatedBy) o.updated_by = o.updatedBy;
       return res.json({ success: true, data: o, sale });
     } else if (status === "on_hold") {
       order.status = "on_hold";
@@ -231,12 +255,18 @@ exports.updateStatus = async (req, res) => {
       });
       // Populate Product and requester
       const populated = await OrderRequest.findByPk(order._id, {
-        include: [{ model: Product }, { model: User, as: "requester" }],
+        include: [
+          { model: Product, as: "product" },
+          { model: User, as: "requester" },
+          { model: User, as: "approvedBy", foreignKey: "approved_by" },
+          { model: User, as: "updatedBy", foreignKey: "updated_by" },
+        ],
       });
       const o = populated.toJSON();
-      o.product = o.Product ? o.Product : null;
-      o.requester = o.requester ? o.requester : null;
-      delete o.Product;
+      if (o.product) o.product_id = o.product;
+      if (o.requester) o.requester_id = o.requester;
+      if (o.approvedBy) o.approved_by = o.approvedBy;
+      if (o.updatedBy) o.updated_by = o.updatedBy;
       return res.json({ success: true, data: o });
     } else {
       // For other statuses, just update
