@@ -31,7 +31,11 @@ exports.getAll = async (req, res) => {
     const orders = await OrderRequest.findAll({
       where,
       include: [
-        { model: OrderRequestItem, as: "items", include: [{ model: Product, as: "product" }] },
+        {
+          model: OrderRequestItem,
+          as: "items",
+          include: [{ model: Product, as: "product" }],
+        },
         { model: User, as: "requester" },
         { model: ApproveRequest, as: "approve_request" },
         { model: ConfirmDelivery, as: "confirm_delivery" },
@@ -79,7 +83,11 @@ exports.create = async (req, res) => {
     // Populate order with items
     const populated = await OrderRequest.findByPk(order._id, {
       include: [
-        { model: OrderRequestItem, as: "order_request_items" },
+        {
+          model: OrderRequestItem,
+          as: "items",
+          include: [{ model: Product, as: "product" }],
+        },
         { model: User, as: "requester" },
         { model: ApproveRequest, as: "approve_request" },
         { model: ConfirmDelivery, as: "confirm_delivery" },
