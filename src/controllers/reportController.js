@@ -50,7 +50,7 @@ exports.activityLogs = async (req, res) => {
     res.json({
       success: true,
       data: logs,
-      pagination: { totalItems, totalPages, currentPage: page },
+      pagination: { page, limit, totalItems, totalPages },
     });
   } catch (err) {
     res

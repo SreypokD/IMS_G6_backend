@@ -2,24 +2,14 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("./index");
 const { generateObjectId } = require("../utils/objectId.util");
 
-const OrderRequestItem = sequelize.define(
-  "OrderRequestItem",
+const Stock = sequelize.define(
+  "Stock",
   {
     _id: {
       type: DataTypes.STRING(24),
       primaryKey: true,
       defaultValue: () => generateObjectId(),
     },
-
-    order_request_id: {
-      type: DataTypes.STRING(24),
-      allowNull: false,
-      references: {
-        model: "order_requests",
-        key: "_id",
-      },
-    },
-
     product_id: {
       type: DataTypes.STRING(24),
       allowNull: false,
@@ -28,35 +18,41 @@ const OrderRequestItem = sequelize.define(
         key: "_id",
       },
     },
-
+    user_id: {
+      type: DataTypes.STRING(24),
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "_id",
+      },
+    },
+    type: {
+      type: DataTypes.ENUM("in", "out"),
+      allowNull: false,
+    },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      validate: {
-        min: 1,
-      },
     },
-
-    unit_price: {
-      type: DataTypes.DECIMAL(10, 2),
+    balance: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    location: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
-
-    subtotal: {
-      type: DataTypes.DECIMAL(12, 2),
+    completed_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    note: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
   },
-  {
-    tableName: "order_request_items",
-    timestamps: true,
-    indexes: [
-      {
-        unique: true,
-        fields: ["order_request_id", "product_id"],
-      },
-    ],
-  },
+  { timestamps: true, tableName: "stocks" },
 );
 
-module.exports = OrderRequestItem;
+module.exports = Stock;

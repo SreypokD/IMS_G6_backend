@@ -8,7 +8,16 @@ exports.getAll = async (req, res) => {
     const offset = (page - 1) * limit;
     const totalItems = await Sale.count();
     const totalPages = Math.ceil(totalItems / limit);
+    const { Product, OrderRequest, User } = require("../models/associations");
     const sales = await Sale.findAll({
+      include: [
+        { model: Product, as: "product" },
+        {
+          model: OrderRequest,
+          as: "order_request",
+          include: [{ model: User, as: "requester" }],
+        },
+      ],
       limit,
       offset,
       order: [["createdAt", "DESC"]],

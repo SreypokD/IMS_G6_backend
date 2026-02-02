@@ -312,7 +312,8 @@ async function seed() {
       approved_date: null,
       admin_remark: null,
       requester_id: customerUser._id,
-      Product_id: products[0]._id,
+      product_id: products[0]._id,
+      supplier_id: products[0].supplier_id,
     }),
     // Approved order by staff
     OrderRequest.create({
@@ -330,7 +331,8 @@ async function seed() {
       approved_date: new Date(),
       admin_remark: "",
       requester_id: staffUser._id,
-      Product_id: products[1]._id,
+      product_id: products[1]._id,
+      supplier_id: products[1].supplier_id,
     }),
     // Rejected order by customer
     OrderRequest.create({
@@ -348,7 +350,8 @@ async function seed() {
       approved_date: null,
       admin_remark: "",
       requester_id: customerUser._id,
-      Product_id: products[2]._id,
+      product_id: products[2]._id,
+      supplier_id: products[2].supplier_id,
     }),
   ]);
 

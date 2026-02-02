@@ -33,6 +33,7 @@ const uploadRoutes = require("./routes/upload");
 const approveRequestsRoutes = require("./routes/approveRequests");
 const confirmDeliveriesRoutes = require("./routes/confirmDeliveries");
 const salesRoutes = require("./routes/sales");
+const stockRoutes = require("./routes/stocks");
 const notificationsRoutes = require("./routes/notifications");
 
 app.use("/api/auth", authRoutes);
@@ -48,6 +49,7 @@ app.use("/api/permissions", permissionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api/stocks", stockRoutes);
 
 // Health check
 app.get("/", (req, res) => {
