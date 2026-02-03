@@ -110,45 +110,64 @@ exports.updateStatus = async (req, res) => {
       customer_remark,
       delivery_date,
     } = req.body;
+    // Only allow valid ENUM values for status
+    const allowedStatuses = ["pending", "approved", "rejected", "completed", "cancelled", "on_hold"];
+    if (status && !allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: `Invalid status value: ${status}` });
+    }
     const user_id = req.user?._id || (req.user && req.user._id);
     if (status === "approved") {
       if (admin_remarks) order.admin_remarks = admin_remarks;
       if (admin_remarks) order.admin_remark = admin_remarks;
       order.approved_by = user_id;
       order.approved_date = new Date();
-      // Check available stock (not reserved)
-      const product = await Product.findByPk(order.product_id);
-      if (!product) return res.status(404).json({ error: "Product not found" });
-      const availableStock = product.stock - product.reserved_stock;
-      if (availableStock < order.quantity) {
-        return res
-          .status(400)
-          .json({ error: "Insufficient stock for approval" });
+
+      // Fetch all order items
+      const orderItems = await OrderRequestItem.findAll({ where: { order_request_id: order._id } });
+      if (!orderItems || orderItems.length === 0) {
+        return res.status(400).json({ error: "No order items found for this order." });
       }
-      // Reserve stock (do not reduce actual stock yet)
-      product.reserved_stock += order.quantity;
-      await product.save();
-      // Create sale
-      const sale = await Sale.create({
-        order_request_id: order._id,
-        product_id: product._id,
-        quantity: order.quantity,
-        status: "processing",
-      });
-      await Stock.create({
-        product_id: product._id,
-        user_id,
-        type: "out",
-        quantity: order.quantity,
-        balance: product.stock - product.reserved_stock, // show available after reservation
-        location: order.location || null,
-        completed_at: new Date(),
-        note: `Reserved for order approval (#${order._id})`,
-      });
+
+      // Check stock for all items first
+      for (const item of orderItems) {
+        const product = await Product.findByPk(item.product_id);
+        if (!product) {
+          return res.status(404).json({ error: `Product not found for item with product_id: ${item.product_id}` });
+        }
+        const availableStock = product.stock - product.reserved_stock;
+        if (availableStock < item.quantity) {
+          return res.status(400).json({ error: `Insufficient stock for product ${product.name}` });
+        }
+      }
+
+      // Reserve stock and create sales/stock records for all items
+      for (const item of orderItems) {
+        const product = await Product.findByPk(item.product_id);
+        product.reserved_stock += item.quantity;
+        await product.save();
+        await Sale.create({
+          order_request_id: order._id,
+          product_id: product._id,
+          quantity: item.quantity,
+          status: "processing",
+        });
+        await Stock.create({
+          product_id: product._id,
+          user_id,
+          type: "out",
+          quantity: item.quantity,
+          balance: product.stock - product.reserved_stock, // show available after reservation
+          location: order.location || null,
+          completed_at: new Date(),
+          note: `Reserved for order approval (#${order._id})`,
+        });
+      }
+
       order.status = "approved";
       order.rejection_reason = null;
       order.notified = false;
       await order.save();
+
       let approveRequest = await ApproveRequest.findOne({
         where: { order_request_id: order._id },
       });
@@ -162,20 +181,23 @@ exports.updateStatus = async (req, res) => {
         });
       } else {
         approveRequest.status = "approved";
-        approveRequest.admin_remarks =
-          admin_remarks || approveRequest.admin_remarks;
+        approveRequest.admin_remarks = admin_remarks || approveRequest.admin_remarks;
         approveRequest.approved_by = user_id;
         approveRequest.approved_date = order.approved_date;
         await approveRequest.save();
       }
-      // Log activity
-      await ActivityLog.create({
-        user_id,
-        action: "approve_order_request",
-        details: `OrderRequest ${order._id} approved. Reserved ${order.quantity} units of product ${product._id}.`,
-        entity_type: "OrderRequest",
-        entity_id: order._id,
-      });
+
+      // Log activity (for all items)
+      for (const item of orderItems) {
+        await ActivityLog.create({
+          user_id,
+          action: "approve_order_request",
+          details: `OrderRequest ${order._id} approved. Reserved ${item.quantity} units of product ${item.product_id}.`,
+          entity_type: "OrderRequest",
+          entity_id: order._id,
+        });
+      }
+
       // Notify requester
       await Notification.create({
         user_id: order.requester_id,
@@ -184,23 +206,22 @@ exports.updateStatus = async (req, res) => {
         entity_type: "OrderRequest",
         entity_id: order._id,
       });
+
+      // Return updated order with items
       const orderRequest = await OrderRequest.findByPk(order._id, {
         include: [
-          { model: Product, as: "product" },
+          {
+            model: OrderRequestItem,
+            as: "items",
+            include: [{ model: Product, as: "product" }],
+          },
           { model: User, as: "requester" },
-          { model: User, as: "approvedBy", foreignKey: "approved_by" },
-          { model: User, as: "updatedBy", foreignKey: "updated_by" },
           { model: ApproveRequest, as: "approve_request" },
           { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
-      // Populate *_id fields as objects
       const data = orderRequest.toJSON();
-      if (data.product) data.product_id = data.product;
-      if (data.requester) data.requester_id = data.requester;
-      if (data.approvedBy) data.approved_by = data.approvedBy;
-      if (data.updatedBy) data.updated_by = data.updatedBy;
-      return res.json({ success: true, data, sale: sale });
+      return res.json({ success: true, data });
     } else if (status === "rejected") {
       if (admin_remarks) order.admin_remarks = admin_remarks;
       // Release reserved stock if previously approved
@@ -454,7 +475,7 @@ exports.confirmDelivery = async (req, res) => {
         .status(400)
         .json({ error: "Only approved orders can be confirmed for delivery" });
     }
-    order.status = "delivered";
+    order.status = "completed";
     await order.save();
     await ActivityLog.create({
       user_id: req.user._id,
@@ -504,7 +525,11 @@ exports.confirmDelivery = async (req, res) => {
     });
     const orderRequest = await OrderRequest.findByPk(order._id, {
       include: [
-        { model: Product, as: "product" },
+        {
+          model: OrderRequestItem,
+          as: "items",
+          include: [{ model: Product, as: "product" }],
+        },
         { model: User, as: "requester" },
         { model: ApproveRequest, as: "approve_request" },
         { model: ConfirmDelivery, as: "confirm_delivery" },
