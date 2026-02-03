@@ -26,6 +26,10 @@ exports.getAll = async (req, res) => {
     }
     const where = {};
     if (status) where.status = status;
+    // Only admin/staff see all, others see only their own
+    if (!req.user || (req.user.role !== "admin" && req.user.role !== "staff")) {
+      where.requester_id = req.user?._id;
+    }
     const totalItems = await OrderRequest.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
     const orders = await OrderRequest.findAll({
@@ -111,7 +115,14 @@ exports.updateStatus = async (req, res) => {
       delivery_date,
     } = req.body;
     // Only allow valid ENUM values for status
-    const allowedStatuses = ["pending", "approved", "rejected", "completed", "cancelled", "on_hold"];
+    const allowedStatuses = [
+      "pending",
+      "approved",
+      "rejected",
+      "completed",
+      "cancelled",
+      "on_hold",
+    ];
     if (status && !allowedStatuses.includes(status)) {
       return res.status(400).json({ error: `Invalid status value: ${status}` });
     }
@@ -123,20 +134,28 @@ exports.updateStatus = async (req, res) => {
       order.approved_date = new Date();
 
       // Fetch all order items
-      const orderItems = await OrderRequestItem.findAll({ where: { order_request_id: order._id } });
+      const orderItems = await OrderRequestItem.findAll({
+        where: { order_request_id: order._id },
+      });
       if (!orderItems || orderItems.length === 0) {
-        return res.status(400).json({ error: "No order items found for this order." });
+        return res
+          .status(400)
+          .json({ error: "No order items found for this order." });
       }
 
       // Check stock for all items first
       for (const item of orderItems) {
         const product = await Product.findByPk(item.product_id);
         if (!product) {
-          return res.status(404).json({ error: `Product not found for item with product_id: ${item.product_id}` });
+          return res.status(404).json({
+            error: `Product not found for item with product_id: ${item.product_id}`,
+          });
         }
         const availableStock = product.stock - product.reserved_stock;
         if (availableStock < item.quantity) {
-          return res.status(400).json({ error: `Insufficient stock for product ${product.name}` });
+          return res
+            .status(400)
+            .json({ error: `Insufficient stock for product ${product.name}` });
         }
       }
 
@@ -181,7 +200,8 @@ exports.updateStatus = async (req, res) => {
         });
       } else {
         approveRequest.status = "approved";
-        approveRequest.admin_remarks = admin_remarks || approveRequest.admin_remarks;
+        approveRequest.admin_remarks =
+          admin_remarks || approveRequest.admin_remarks;
         approveRequest.approved_by = user_id;
         approveRequest.approved_date = order.approved_date;
         await approveRequest.save();
@@ -192,8 +212,8 @@ exports.updateStatus = async (req, res) => {
         await ActivityLog.create({
           user_id,
           action: "approve_order_request",
-          details: `OrderRequest ${order._id} approved. Reserved ${item.quantity} units of product ${item.product_id}.`,
-          entity_type: "OrderRequest",
+          details: `Order Request approved. Reserved ${item.quantity} units of product ${item.product_id}.`,
+          entity_type: "Order Request",
           entity_id: order._id,
         });
       }
@@ -202,8 +222,8 @@ exports.updateStatus = async (req, res) => {
       await Notification.create({
         user_id: order.requester_id,
         type: "order_approved",
-        message: `Your order request #${order._id} has been approved.`,
-        entity_type: "OrderRequest",
+        message: `Your order request has been approved.`,
+        entity_type: "Order Request",
         entity_id: order._id,
       });
 
@@ -221,20 +241,36 @@ exports.updateStatus = async (req, res) => {
         ],
       });
       const data = orderRequest.toJSON();
-      return res.json({ success: true, data });
+      // Always return populated order with items, requester, approve_request, confirm_delivery
+      const populatedOrder = await OrderRequest.findByPk(order._id, {
+        include: [
+          {
+            model: OrderRequestItem,
+            as: "items",
+            include: [{ model: Product, as: "product" }],
+          },
+          { model: User, as: "requester" },
+          { model: ApproveRequest, as: "approve_request" },
+          { model: ConfirmDelivery, as: "confirm_delivery" },
+        ],
+      });
+      return res.json({ success: true, data: populatedOrder });
     } else if (status === "rejected") {
       if (admin_remarks) order.admin_remarks = admin_remarks;
-      // Release reserved stock if previously approved
+      // Release reserved stock for all items if previously approved
       if (order.status === "approved") {
-        const product = await Product.findByPk(
-          order.product_id || order.product_id,
-        );
-        if (product) {
-          product.reserved_stock = Math.max(
-            0,
-            product.reserved_stock - order.quantity,
-          );
-          await product.save();
+        const orderItems = await OrderRequestItem.findAll({
+          where: { order_request_id: order._id },
+        });
+        for (const item of orderItems) {
+          const product = await Product.findByPk(item.product_id);
+          if (product) {
+            product.reserved_stock = Math.max(
+              0,
+              product.reserved_stock - item.quantity,
+            );
+            await product.save();
+          }
         }
       }
       order.status = "rejected";
@@ -261,102 +297,116 @@ exports.updateStatus = async (req, res) => {
         approveRequest.approved_by = user_id;
         await approveRequest.save();
       }
-      // Log activity
+      // Log activity for all items
       await ActivityLog.create({
         user_id,
         action: "reject_order_request",
-        details: `OrderRequest ${order._id} rejected. Reason: ${order.rejection_reason}`,
-        entity_type: "OrderRequest",
+        details: `Order Request rejected. Reason: ${order.rejection_reason}`,
+        entity_type: "Order Request",
         entity_id: order._id,
       });
       // Notify requester
       await Notification.create({
         user_id: order.requester_id,
         type: "order_rejected",
-        message: `Your order request #${order._id} has been rejected. Reason: ${order.rejection_reason}`,
-        entity_type: "OrderRequest",
+        message: `Your order request has been rejected. Reason: ${order.rejection_reason}`,
+        entity_type: "Order Request",
         entity_id: order._id,
       });
       const orderRequest = await OrderRequest.findByPk(order._id, {
         include: [
-          { model: Product, as: "product" },
+          {
+            model: OrderRequestItem,
+            as: "items",
+            include: [{ model: Product, as: "product" }],
+          },
           { model: User, as: "requester" },
-          { model: User, as: "approvedBy", foreignKey: "approved_by" },
-          { model: User, as: "updatedBy", foreignKey: "updated_by" },
           { model: ApproveRequest, as: "approve_request" },
           { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
       const data = orderRequest.toJSON();
-      if (data.product) data.product_id = data.product;
-      if (data.requester) data.requester_id = data.requester;
-      if (data.approvedBy) data.approved_by = data.approvedBy;
-      if (data.updatedBy) data.updated_by = data.updatedBy;
       return res.json({ success: true, data });
     } else if (status === "completed") {
-      // Mark sales order as completed and deduct stock
-      const sale = await Sale.findOne({
+      // Mark all sales as completed and deduct stock for all items
+      const orderItems = await OrderRequestItem.findAll({
         where: { order_request_id: order._id },
       });
-      if (!sale) return res.status(404).json({ error: "Sales not found" });
-      const product = await Product.findByPk(order.product_id);
-      if (!product) return res.status(404).json({ error: "Product not found" });
-      // Deduct stock and release reserved
-      product.stock = Math.max(0, product.stock - order.quantity);
-      product.reserved_stock = Math.max(
-        0,
-        product.reserved_stock - order.quantity,
-      );
-      await product.save();
-      sale.status = "completed";
-      sale.completed_at = new Date();
-      await sale.save();
+      for (const item of orderItems) {
+        const sale = await Sale.findOne({
+          where: { order_request_id: order._id, product_id: item.product_id },
+        });
+        if (!sale) continue;
+        const product = await Product.findByPk(item.product_id);
+        if (!product) continue;
+        // Deduct stock and release reserved
+        product.stock = Math.max(0, product.stock - item.quantity);
+        product.reserved_stock = Math.max(
+          0,
+          product.reserved_stock - item.quantity,
+        );
+        await product.save();
+        sale.status = "completed";
+        sale.completed_at = new Date();
+        await sale.save();
+        await Stock.create({
+          product_id: product._id,
+          user_id,
+          type: "out",
+          quantity: item.quantity,
+          balance: product.stock,
+          location: order.location || null,
+          completed_at: new Date(),
+          note: `Deducted for order completion (#${order._id})`,
+        });
+        // Log activity for each item
+        await ActivityLog.create({
+          user_id,
+          action: "complete_order_request",
+          details: `Order Request completed. Deducted ${item.quantity} units from product ${product._id}.`,
+          entity_type: "Order Request",
+          entity_id: order._id,
+        });
+      }
       order.status = "completed";
       order.notified = false;
       await order.save();
-      await Stock.create({
-        product_id: product._id,
-        user_id,
-        type: "out",
-        quantity: order.quantity,
-        balance: product.stock,
-        location: order.location || null,
-        completed_at: new Date(),
-        note: `Deducted for order completion (#${order._id})`,
-      });
-      // Log activity
-      await ActivityLog.create({
-        user_id,
-        action: "complete_order_request",
-        details: `OrderRequest ${order._id} completed. Deducted ${order.quantity} units from product ${product._id}.`,
-        entity_type: "OrderRequest",
-        entity_id: order._id,
-      });
       // Notify requester
       await Notification.create({
         user_id: order.requester_id,
         type: "order_completed",
-        message: `Your order request #${order._id} has been completed.`,
-        entity_type: "OrderRequest",
+        message: `Your order request has been completed.`,
+        entity_type: "Order Request",
         entity_id: order._id,
       });
-      // Populate Product and requester
+      // Populate order with items
       const populated = await OrderRequest.findByPk(order._id, {
         include: [
-          { model: Product, as: "product" },
+          {
+            model: OrderRequestItem,
+            as: "items",
+            include: [{ model: Product, as: "product" }],
+          },
           { model: User, as: "requester" },
-          { model: User, as: "approvedBy", foreignKey: "approved_by" },
-          { model: User, as: "updatedBy", foreignKey: "updated_by" },
           { model: ApproveRequest, as: "approve_request" },
           { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
       const o = populated.toJSON();
-      if (o.product) o.product_id = o.product;
-      if (o.requester) o.requester_id = o.requester;
-      if (o.approvedBy) o.approved_by = o.approvedBy;
-      if (o.updatedBy) o.updated_by = o.updatedBy;
-      return res.json({ success: true, data: o, sale });
+      // Always return populated order with items, requester, approve_request, confirm_delivery
+      const populatedOrder = await OrderRequest.findByPk(order._id, {
+        include: [
+          {
+            model: OrderRequestItem,
+            as: "items",
+            include: [{ model: Product, as: "product" }],
+          },
+          { model: User, as: "requester" },
+          { model: ApproveRequest, as: "approve_request" },
+          { model: ConfirmDelivery, as: "confirm_delivery" },
+        ],
+      });
+      return res.json({ success: true, data: populatedOrder });
     } else if (status === "on_hold") {
       order.status = "on_hold";
       if (customer_remark) order.customer_remark = customer_remark;
@@ -367,16 +417,16 @@ exports.updateStatus = async (req, res) => {
       await ActivityLog.create({
         user_id,
         action: "hold_order_request",
-        details: `OrderRequest ${order._id} put on hold.`,
-        entity_type: "OrderRequest",
+        details: `Order Request put on hold.`,
+        entity_type: "Order Request",
         entity_id: order._id,
       });
       // Notify requester
       await Notification.create({
         user_id: order.requester_id,
         type: "order_on_hold",
-        message: `Your order request #${order._id} is on hold.`,
-        entity_type: "OrderRequest",
+        message: `Your order request is on hold.`,
+        entity_type: "Order Request",
         entity_id: order._id,
       });
       // Populate Product and requester
@@ -408,8 +458,8 @@ exports.updateStatus = async (req, res) => {
       await Notification.create({
         user_id: order.requester_id,
         type: `order_${status}`,
-        message: `Your order request #${order._id} status updated to ${status}.`,
-        entity_type: "OrderRequest",
+        message: `Your order request status updated to ${status}.`,
+        entity_type: "Order Request",
         entity_id: order._id,
       });
       return res.json({ success: true, data: order });
@@ -438,8 +488,8 @@ exports.cancelOrderRequest = async (req, res) => {
     await ActivityLog.create({
       user_id: req.user._id,
       action: "cancel_order_request",
-      details: `OrderRequest ${order._id} cancelled by customer`,
-      entity_type: "OrderRequest",
+      details: `Order Request cancelled by customer`,
+      entity_type: "Order Request",
       entity_id: order._id,
     });
     // Notify admin(s) - for demo, notify all admins (could be improved)
@@ -448,8 +498,8 @@ exports.cancelOrderRequest = async (req, res) => {
       await Notification.create({
         user_id: admin._id,
         type: "order_cancelled",
-        message: `Order request #${order._id} was cancelled by the customer`,
-        entity_type: "OrderRequest",
+        message: `Order request was cancelled by the customer`,
+        entity_type: "Order Request",
         entity_id: order._id,
       });
     }
@@ -480,16 +530,16 @@ exports.confirmDelivery = async (req, res) => {
     await ActivityLog.create({
       user_id: req.user._id,
       action: "confirm_delivery",
-      details: `OrderRequest ${order._id} delivery confirmed`,
-      entity_type: "OrderRequest",
+      details: `Order Request delivery confirmed`,
+      entity_type: "Order Request",
       entity_id: order._id,
     });
     // Notify requester
     await Notification.create({
       user_id: order.requester_id,
       type: "order_delivered",
-      message: `Your order request #${order._id} has been delivered.`,
-      entity_type: "OrderRequest",
+      message: `Your order request has been delivered.`,
+      entity_type: "Order Request",
       entity_id: order._id,
     });
     let confirmDelivery = await ConfirmDelivery.findOne({
@@ -498,31 +548,16 @@ exports.confirmDelivery = async (req, res) => {
     if (!confirmDelivery) {
       confirmDelivery = await ConfirmDelivery.create({
         order_request_id: order._id,
-        status: "delivered",
+        status: "completed", // align with model and order status
         confirmed_by: req.user._id,
         confirmed_at: new Date(),
       });
     } else {
-      confirmDelivery.status = "delivered";
+      confirmDelivery.status = "completed";
       confirmDelivery.confirmed_by = req.user._id;
       confirmDelivery.confirmed_at = new Date();
       await confirmDelivery.save();
     }
-    await ActivityLog.create({
-      user_id: req.user._id,
-      action: "confirm_delivery",
-      details: `OrderRequest ${order._id} delivery confirmed`,
-      entity_type: "OrderRequest",
-      entity_id: order._id,
-    });
-    // Notify requester
-    await Notification.create({
-      user_id: order.requester_id,
-      type: "order_delivered",
-      message: `Your order request #${order._id} has been delivered.`,
-      entity_type: "OrderRequest",
-      entity_id: order._id,
-    });
     const orderRequest = await OrderRequest.findByPk(order._id, {
       include: [
         {
@@ -536,6 +571,89 @@ exports.confirmDelivery = async (req, res) => {
       ],
     });
     res.json({ success: true, data: orderRequest });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Update order request details (notes, delivery_date, items, etc.)
+exports.update = async (req, res) => {
+  try {
+    const order = await OrderRequest.findByPk(req.params.id, {
+      include: [{ model: OrderRequestItem, as: "items" }],
+    });
+    if (!order)
+      return res.status(404).json({ error: "Order request not found" });
+    if (order.status !== "pending") {
+      return res
+        .status(400)
+        .json({ error: "Only pending order requests can be updated" });
+    }
+    const { notes, delivery_date, orderItems } = req.body;
+    if (notes !== undefined) order.notes = notes;
+    if (delivery_date !== undefined) order.delivery_date = delivery_date;
+    await order.save();
+    // Patch items if provided
+    if (Array.isArray(orderItems)) {
+      // Get current items as a map for quick lookup
+      const existingItems = await OrderRequestItem.findAll({
+        where: { order_request_id: order._id },
+      });
+      const existingMap = new Map(
+        existingItems.map((item) => [item.product_id, item]),
+      );
+      const incomingMap = new Map(
+        orderItems.map((item) => [item.product_id, item]),
+      );
+      // Update or create items
+      for (const item of orderItems) {
+        if (existingMap.has(item.product_id)) {
+          // Update existing item
+          const existing = existingMap.get(item.product_id);
+          existing.quantity = item.quantity;
+          existing.unit_price = item.unit_price;
+          existing.subtotal = item.subtotal;
+          await existing.save();
+        } else {
+          // Add new item
+          await OrderRequestItem.create({
+            order_request_id: order._id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            subtotal: item.subtotal,
+          });
+        }
+      }
+      // Remove items not in incoming list
+      for (const [product_id, existing] of existingMap.entries()) {
+        if (!incomingMap.has(product_id)) {
+          await existing.destroy();
+        }
+      }
+    }
+    // Log activity
+    await ActivityLog.create({
+      user_id: req.user._id,
+      action: "update_order_request",
+      details: `Order Request updated`,
+      entity_type: "Order Request",
+      entity_id: order._id,
+    });
+    // Return updated order
+    const populatedOrder = await OrderRequest.findByPk(order._id, {
+      include: [
+        {
+          model: OrderRequestItem,
+          as: "items",
+          include: [{ model: Product, as: "product" }],
+        },
+        { model: User, as: "requester" },
+        { model: ApproveRequest, as: "approve_request" },
+        { model: ConfirmDelivery, as: "confirm_delivery" },
+      ],
+    });
+    return res.json({ success: true, data: populatedOrder });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

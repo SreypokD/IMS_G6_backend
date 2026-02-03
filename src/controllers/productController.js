@@ -17,7 +17,6 @@ exports.getAll = async (req, res) => {
 
     // Get paginated products
     const products = await Product.findAll({
-      attributes: { exclude: ["supplier_id", "category_id"] },
       include: [
         { model: Category, as: "category" },
         { model: Supplier, as: "supplier" },

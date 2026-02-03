@@ -10,7 +10,6 @@ const OrderRequestItem = sequelize.define(
       primaryKey: true,
       defaultValue: () => generateObjectId(),
     },
-
     order_request_id: {
       type: DataTypes.STRING(24),
       allowNull: false,
@@ -19,7 +18,6 @@ const OrderRequestItem = sequelize.define(
         key: "_id",
       },
     },
-
     product_id: {
       type: DataTypes.STRING(24),
       allowNull: false,
@@ -28,7 +26,6 @@ const OrderRequestItem = sequelize.define(
         key: "_id",
       },
     },
-
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -36,15 +33,21 @@ const OrderRequestItem = sequelize.define(
         min: 1,
       },
     },
-
     unit_price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
+      get() {
+        const value = this.getDataValue("unit_price");
+        return value !== null ? parseFloat(value) : null;
+      },
     },
-
     subtotal: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: true,
+      get() {
+        const value = this.getDataValue("subtotal");
+        return value !== null ? parseFloat(value) : null;
+      },
     },
   },
   {

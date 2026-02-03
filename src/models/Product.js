@@ -23,19 +23,19 @@ const Product = sequelize.define(
     image: { type: DataTypes.STRING },
     stock: { type: DataTypes.INTEGER, defaultValue: 0 },
     reserved_stock: { type: DataTypes.INTEGER, defaultValue: 0 },
-    supplier_id: {
-      type: DataTypes.STRING(24),
-      allowNull: true,
-      references: {
-        model: "suppliers",
-        key: "_id",
-      },
-    },
     category_id: {
       type: DataTypes.STRING(24),
       allowNull: true,
       references: {
         model: "categories",
+        key: "_id",
+      },
+    },
+    supplier_id: {
+      type: DataTypes.STRING(24),
+      allowNull: true,
+      references: {
+        model: "suppliers",
         key: "_id",
       },
     },
