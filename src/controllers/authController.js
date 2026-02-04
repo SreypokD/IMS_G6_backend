@@ -9,14 +9,36 @@ const refreshTokens = new Set(); // In-memory store for demo; use DB/Redis in pr
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, role, permission_id } = req.body;
+    const { email, password, first_name, last_name, phone } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Assign permission_id if provided
+    // Always assign 'customer' role and customer permissions
+    // Find or create the 'customer' permission
+    let customerPermission = await Permission.findOne({
+      where: { name: "customer" },
+    });
+    if (!customerPermission) {
+      customerPermission = await Permission.create({
+        name: "customer",
+        description: "Customer role permissions",
+        permissions: [
+          "view_dashboard",
+          "view_product",
+          "view_category",
+          "view_supplier",
+          "view_order_request",
+          "create_order_request",
+          "view_order_history",
+        ],
+      });
+    }
     const user = await User.create({
+      first_name,
+      last_name,
       email,
+      phone,
       password: hashedPassword,
-      role,
-      permission_id,
+      role: "customer",
+      permission_id: customerPermission._id,
     });
     // Fetch user with permission (role) object
     const userWithPermission = await User.findByPk(user._id, {
@@ -27,6 +49,7 @@ exports.register = async (req, res) => {
       data: {
         _id: userWithPermission._id,
         email: userWithPermission.email,
+        phone: userWithPermission.phone,
         role: userWithPermission.role,
         first_name: userWithPermission.first_name,
         last_name: userWithPermission.last_name,
