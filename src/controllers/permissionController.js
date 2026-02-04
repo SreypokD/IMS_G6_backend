@@ -16,7 +16,7 @@ exports.getAll = async (req, res) => {
     const permissions = await Permission.findAll({
       limit,
       offset,
-      order: [["_id", "ASC"]],
+      order: [["_id", "DESC"]],
     });
 
     res.json({

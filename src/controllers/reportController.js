@@ -3,12 +3,15 @@ const User = require("../models/User");
 const Product = require("../models/Product");
 const ActivityLog = require("../models/ActivityLog");
 const OrderRequest = require("../models/OrderRequest");
+const Supplier = require("../models/Supplier");
 
 exports.inventorySummary = async (req, res) => {
+  const totalSuppliers = await Supplier.count();
   const products = await Product.findAll();
   const totalProducts = products.length;
-  const totalQuantity = products.reduce((sum, p) => sum + p.quantity, 0);
-  res.json({ totalProducts, totalQuantity });
+  const totalQuantity = products.reduce((sum, p) => sum + p.stock, 0);
+  const lowStock = products.filter((p) => p.stock <= 10).length;
+  res.json({ totalProducts, totalQuantity, lowStock, totalSuppliers });
 };
 
 exports.orderStats = async (req, res) => {
@@ -45,7 +48,7 @@ exports.activityLogs = async (req, res) => {
       include: [{ model: User, as: "user" }],
       limit,
       offset,
-      order: [["_id", "ASC"]],
+      order: [["_id", "DESC"]],
     });
     res.json({
       success: true,

@@ -12,7 +12,7 @@ exports.getAll = async (req, res) => {
     const users = await User.findAll({
       limit,
       offset,
-      order: [["_id", "ASC"]],
+      order: [["_id", "DESC"]],
     });
     res.json({
       success: true,

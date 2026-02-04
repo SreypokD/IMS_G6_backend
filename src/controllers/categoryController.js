@@ -10,7 +10,7 @@ exports.getAll = async (req, res) => {
     const categories = await Category.findAll({
       limit,
       offset,
-      order: [["_id", "ASC"]],
+      order: [["_id", "DESC"]],
     });
     res.json({
       success: true,

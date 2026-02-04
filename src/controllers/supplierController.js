@@ -11,7 +11,7 @@ exports.getAll = async (req, res) => {
     const suppliers = await Supplier.findAll({
       limit,
       offset,
-      order: [["_id", "ASC"]],
+      order: [["_id", "DESC"]],
       include: [
         {
           model: Product,
