@@ -3,17 +3,19 @@ const Permission = require("../models/Permission");
 // Get all permissions
 exports.getAll = async (req, res) => {
   try {
-    // Parse pagination params
+    const { Op } = require("sequelize");
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
+    const search = req.query.search || "";
     const offset = (page - 1) * limit;
-
-    // Get total count
-    const totalItems = await Permission.count();
+    const where = {};
+    if (search) {
+      where.name = { [Op.like]: `%${search}%` };
+    }
+    const totalItems = await Permission.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
-
-    // Get paginated permissions
     const permissions = await Permission.findAll({
+      where,
       limit,
       offset,
       order: [["_id", "DESC"]],

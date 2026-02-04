@@ -1,9 +1,23 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const orderRequestController = require('../controllers/orderRequestController');
-const authenticateToken = require('../middleware/auth');
+const orderRequestController = require("../controllers/orderRequestController");
+const authenticateToken = require("../middleware/auth");
 
-router.get('/', authenticateToken, (req, res) => orderRequestController.getAll(req, res, { status: 'approved' }));
-router.patch('/:id', authenticateToken, orderRequestController.confirmDelivery);
+router.get("/", authenticateToken, (req, res) => {
+  const status = "approved";
+  const search = req.query.search || "";
+  // Support both approve_status and approve_request.status as query param
+  const approve_status =
+    req.query.approve_status || req.query["approve_request.status"] || "";
+  const delivery_status =
+    req.query.delivery_status || req.query["confirm_delivery.status"] || "";
+  orderRequestController.getAll(req, res, {
+    status,
+    search,
+    approve_status,
+    delivery_status,
+  });
+});
+router.patch("/:id", authenticateToken, orderRequestController.confirmDelivery);
 
 module.exports = router;

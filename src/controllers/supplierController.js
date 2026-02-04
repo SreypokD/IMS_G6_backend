@@ -3,12 +3,32 @@ const Product = require("../models/Product");
 
 exports.getAll = async (req, res) => {
   try {
+    const { Op } = require("sequelize");
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
+    const search = req.query.search || "";
+    const status = req.query.status || "";
+    const location = req.query.location || "";
     const offset = (page - 1) * limit;
-    const totalItems = await Supplier.count();
+    const where = {};
+    if (search) {
+      where[Op.or] = [
+        { company_name: { [Op.like]: `%${search}%` } },
+        { contact_person: { [Op.like]: `%${search}%` } },
+        { contact_email: { [Op.like]: `%${search}%` } },
+        { contact_phone: { [Op.like]: `%${search}%` } }
+      ];
+    }
+    if (status) {
+      where.status = status;
+    }
+    if (location) {
+      where.location = location;
+    }
+    const totalItems = await Supplier.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
     const suppliers = await Supplier.findAll({
+      where,
       limit,
       offset,
       order: [["_id", "DESC"]],

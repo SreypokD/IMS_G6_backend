@@ -4,12 +4,29 @@ const Permission = require("../models/Permission");
 // Get all users
 exports.getAll = async (req, res) => {
   try {
+    const { Op } = require("sequelize");
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
+    const search = req.query.search || "";
+    const permission = req.query.permission || "";
     const offset = (page - 1) * limit;
-    const totalItems = await User.count();
+    const where = {};
+    if (search) {
+      where[Op.or] = [
+        { first_name: { [Op.like]: `%${search}%` } },
+        { last_name: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { phone: { [Op.like]: `%${search}%` } },
+        { role: { [Op.like]: `%${search}%` } },
+      ];
+    }
+    if (permission) {
+      where.permission_id = permission;
+    }
+    const totalItems = await User.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
     const users = await User.findAll({
+      where,
       limit,
       offset,
       order: [["_id", "DESC"]],

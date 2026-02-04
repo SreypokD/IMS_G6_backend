@@ -24,26 +24,61 @@ exports.getAll = async (req, res) => {
     ) {
       status = arguments[2].status;
     }
+    const {
+      supplier_id,
+      requester_id,
+      search,
+      approve_status,
+      delivery_status,
+    } = req.query;
+    const { Op } = require("sequelize");
     const where = {};
     if (status) where.status = status;
+    if (supplier_id) where.supplier_id = supplier_id;
+    if (requester_id) where.requester_id = requester_id;
+    if (search) {
+      // Search in notes, customer_remark, admin_remark
+      where[Op.or] = [
+        { notes: { [Op.like]: `%${search}%` } },
+        { customer_remark: { [Op.like]: `%${search}%` } },
+        { admin_remark: { [Op.like]: `%${search}%` } },
+      ];
+    }
+    // Build include array with possible where for nested approve_request/delivery
+    const include = [
+      {
+        model: OrderRequestItem,
+        as: "items",
+        include: [{ model: Product, as: "product" }],
+      },
+      { model: User, as: "requester" },
+      // Add where for approve_request if approve_status is set
+      approve_status
+        ? {
+            model: ApproveRequest,
+            as: "approve_request",
+            where: { status: approve_status },
+          }
+        : { model: ApproveRequest, as: "approve_request" },
+      // Add where for confirm_delivery if delivery_status is set
+      delivery_status
+        ? {
+            model: ConfirmDelivery,
+            as: "confirm_delivery",
+            where: { status: delivery_status },
+          }
+        : { model: ConfirmDelivery, as: "confirm_delivery" },
+    ];
     // Only admin/staff see all, others see only their own
     if (!req.user || (req.user.role !== "admin" && req.user.role !== "staff")) {
       where.requester_id = req.user?._id;
     }
+    // For count, don't use nested where (Sequelize limitation), so count all matching main where
     const totalItems = await OrderRequest.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
     const orders = await OrderRequest.findAll({
       where,
-      include: [
-        {
-          model: OrderRequestItem,
-          as: "items",
-          include: [{ model: Product, as: "product" }],
-        },
-        { model: User, as: "requester" },
-        { model: ApproveRequest, as: "approve_request" },
-        { model: ConfirmDelivery, as: "confirm_delivery" },
-      ],
+      include,
       limit,
       offset,
       order: [["_id", "DESC"]],

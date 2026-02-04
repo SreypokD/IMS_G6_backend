@@ -6,17 +6,36 @@ const { Op } = require("sequelize");
 
 exports.getAll = async (req, res) => {
   try {
-    // Parse pagination params
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
-
-    // Get total count
-    const totalItems = await Product.count();
+    const search = req.query.search || "";
+    const category = req.query.category || "";
+    const supplier = req.query.supplier || "";
+    const status = req.query.status || "";
+    const where = {};
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { code: { [Op.like]: `%${search}%` } },
+      ];
+    }
+    if (category) {
+      where.category_id = category;
+    }
+    if (supplier) {
+      where.supplier_id = supplier;
+    }
+    if (status) {
+      if (status === "in_stock") where.stock = { [Op.gt]: 0 };
+      else if (status === "out_of_stock") where.stock = 0;
+      else if (status === "low_stock")
+        where.stock = { [Op.gt]: 0, [Op.lte]: 10 };
+    }
+    const totalItems = await Product.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
-
-    // Get paginated products
     const products = await Product.findAll({
+      where,
       include: [
         { model: Category, as: "category" },
         { model: Supplier, as: "supplier" },

@@ -2,12 +2,19 @@ const Category = require("../models/Category");
 
 exports.getAll = async (req, res) => {
   try {
+    const { Op } = require("sequelize");
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
+    const search = req.query.search || "";
     const offset = (page - 1) * limit;
-    const totalItems = await Category.count();
+    const where = {};
+    if (search) {
+      where.name = { [Op.like]: `%${search}%` };
+    }
+    const totalItems = await Category.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
     const categories = await Category.findAll({
+      where,
       limit,
       offset,
       order: [["_id", "DESC"]],
