@@ -336,7 +336,7 @@ exports.updateStatus = async (req, res) => {
       await ActivityLog.create({
         user_id,
         action: "reject_order_request",
-        details: `Order Request rejected. Reason: ${order.rejection_reason}`,
+        details: `Order Request rejected.\nReason: ${order.rejection_reason}`,
         entity_type: "Order Request",
         entity_id: order._id,
       });
@@ -344,7 +344,7 @@ exports.updateStatus = async (req, res) => {
       await Notification.create({
         user_id: order.requester_id,
         type: "order_rejected",
-        message: `Your order request has been rejected. Reason: ${order.rejection_reason}`,
+        message: `Your order request has been rejected.\nReason: ${order.rejection_reason}`,
         entity_type: "Order Request",
         entity_id: order._id,
       });
@@ -398,7 +398,7 @@ exports.updateStatus = async (req, res) => {
         await ActivityLog.create({
           user_id,
           action: "complete_order_request",
-          details: `Order Request completed. Deducted ${item.quantity} units from product ${product._id}.`,
+          details: `Order Request completed.\nDeducted ${item.quantity} units from product ${product._id}.`,
           entity_type: "Order Request",
           entity_id: order._id,
         });
