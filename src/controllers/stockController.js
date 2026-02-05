@@ -54,10 +54,41 @@ exports.getAll = async (req, res) => {
 
 // Create a stock in/out transaction
 exports.create = async (req, res) => {
+  const t = await Stock.sequelize.transaction();
   try {
-    const stock = await Stock.create(req.body);
-    res.status(201).json({ success: true, data: stock });
+    const { product_id, quantity, type } = req.body;
+    const product = await Product.findByPk(product_id, { transaction: t });
+    if (!product) {
+      await t.rollback();
+      return res
+        .status(404)
+        .json({ success: false, error: "Product not found" });
+    }
+    let newStock;
+    if (type === "in") {
+      product.stock += Number(quantity);
+    } else if (type === "out") {
+      if (product.stock < Number(quantity)) {
+        await t.rollback();
+        return res
+          .status(400)
+          .json({ success: false, error: "Not enough stock" });
+      }
+      product.stock -= Number(quantity);
+    } else {
+      await t.rollback();
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid stock type" });
+    }
+    await product.save({ transaction: t });
+    // Get new balance after update
+    const balance = product.stock;
+    newStock = await Stock.create({ ...req.body, balance }, { transaction: t });
+    await t.commit();
+    res.status(201).json({ success: true, data: newStock });
   } catch (err) {
+    await t.rollback();
     res.status(400).json({ success: false, error: err.message });
   }
 };
