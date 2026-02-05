@@ -8,6 +8,7 @@ const ApproveRequest = require("../models/ApproveRequest");
 const ConfirmDelivery = require("../models/ConfirmDelivery");
 const Stock = require("../models/Stock");
 const OrderRequestItem = require("../models/OrderRequestItem");
+const { sendMail } = require("../utils/mail.util");
 
 exports.getAll = async (req, res) => {
   try {
@@ -261,6 +262,44 @@ exports.updateStatus = async (req, res) => {
         entity_type: "Order Request",
         entity_id: order._id,
       });
+      // Send email to requester
+      const requester = await User.findByPk(order.requester_id);
+      if (requester && requester.email) {
+        // Prepare order details for email
+        const companyName =
+          process.env.COMPANY_NAME || "Stockify Inventory Management System";
+        const requestDate = order.createdAt
+          ? new Date(order.createdAt).toLocaleDateString()
+          : "-";
+        let productLines = "";
+        for (const item of orderItems) {
+          const product = await Product.findByPk(item.product_id);
+          productLines += `* Product: ${product?.name}\n* Quantity: ${item.quantity}\n* Requested Date: ${requestDate}\n\n`;
+        }
+        const html = `
+          <p>Dear ${requester.first_name + " " + requester.last_name},</p>
+          <p>We’re happy to inform you that your order request <strong>(Order ID: ${order._id})</strong> has been <strong>approved</strong>.</p>
+          <p><strong>Order Details:</strong></p>
+          <ul>
+            ${orderItems
+              .map((item) => {
+                const product = item.product?.name;
+                return `<li>Product: ${product}, Quantity: ${item.quantity}, Requested Date: ${requestDate}</li>`;
+              })
+              .join("")}
+          </ul>
+          <p>Our inventory team is now processing your order. You will be notified once the items are prepared or dispatched.</p>
+          <p>If you have any questions or need further assistance, feel free to contact us.</p>
+          <p>Thank you for using our Inventory Management System.</p>
+          <p>Best regards,<br/>Inventory Management Team<br/>${companyName}</p>
+        `;
+        await sendMail({
+          to: requester.email,
+          subject: "Order Request Approved",
+          text: `Dear ${requester.first_name + " " + requester.last_name},\n\nWe’re happy to inform you that your order request (Order ID: ${order._id}) has been approved.\n\nOrder Details:\n${productLines}\nOur inventory team is now processing your order. You will be notified once the items are prepared or dispatched.\n\nIf you have any questions or need further assistance, feel free to contact us.\n\nThank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
+          html,
+        });
+      }
 
       // Return updated order with items
       const orderRequest = await OrderRequest.findByPk(order._id, {
@@ -348,6 +387,27 @@ exports.updateStatus = async (req, res) => {
         entity_type: "Order Request",
         entity_id: order._id,
       });
+      // Send email to requester
+      const requester = await User.findByPk(order.requester_id);
+      if (requester && requester.email) {
+        const companyName =
+          process.env.COMPANY_NAME || "Stockify Inventory Management System";
+        const html = `
+          <p>Dear ${requester.first_name + " " + requester.last_name},</p>
+          <p>Thank you for submitting your order request <strong>(Order ID: ${order._id})</strong>.</p>
+          <p>After review, we regret to inform you that your request has been <strong>rejected</strong>.</p>
+          <p><strong>Reason for Rejection:</strong><br/>${order.rejection_reason || "No reason provided."}</p>
+          <p>You may submit a new request with updated details or contact the inventory administrator for further clarification.</p>
+          <p>We appreciate your understanding and thank you for using our Inventory Management System.</p>
+          <p>Best regards,<br/>Inventory Management Team<br/>${companyName}</p>
+        `;
+        await sendMail({
+          to: requester.email,
+          subject: "Order Request Rejected",
+          text: `Dear ${requester.first_name},\n\nThank you for submitting your order request (Order ID: ${order._id}).\n\nAfter review, we regret to inform you that your request has been rejected.\n\nReason for Rejection:\n${order.rejection_reason || "No reason provided."}\n\nYou may submit a new request with updated details or contact the inventory administrator for further clarification.\n\nWe appreciate your understanding and thank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
+          html,
+        });
+      }
       const orderRequest = await OrderRequest.findByPk(order._id, {
         include: [
           {
@@ -605,6 +665,46 @@ exports.confirmDelivery = async (req, res) => {
         { model: ConfirmDelivery, as: "confirm_delivery" },
       ],
     });
+    // Send email to requester
+    const requester = await User.findByPk(order.requester_id);
+    if (requester && requester.email) {
+      const companyName =
+        process.env.COMPANY_NAME || "Stockify Inventory Management System";
+      const deliveryDate = order.delivery_date
+        ? new Date(order.delivery_date).toLocaleDateString()
+        : "-";
+      let productLines = "";
+      const orderItems = await OrderRequestItem.findAll({
+        where: { order_request_id: order._id },
+      });
+      for (const item of orderItems) {
+        const product = await Product.findByPk(item.product_id);
+        productLines += `* Product: ${product?.name}\n* Quantity: ${item.quantity}\n`;
+      }
+      const html = `
+        <p>Dear ${requester.first_name + " " + requester.last_name},</p>
+        <p>Your order request <strong>(Order ID: ${order._id})</strong> has been <strong>delivered</strong>.</p>
+        <p><strong>Order Details:</strong></p>
+        <ul>
+          ${orderItems
+            .map((item) => {
+              const product = item.product?.name;
+              return `<li>Product: ${product}, Quantity: ${item.quantity}</li>`;
+            })
+            .join("")}
+        </ul>
+        <p>Delivery Date: ${deliveryDate}</p>
+        <p>If you have any questions, please contact us.</p>
+        <p>Thank you for using our Inventory Management System.</p>
+        <p>Best regards,<br/>Inventory Management Team<br/>${companyName}</p>
+      `;
+      await sendMail({
+        to: requester.email,
+        subject: "Order Request Delivered",
+        text: `Dear ${requester.first_name + " " + requester.last_name},\n\nYour order request (Order ID: ${order._id}) has been delivered.\n\nOrder Details:\n${productLines}\nDelivery Date: ${deliveryDate}\n\nIf you have any questions, please contact us.\n\nThank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
+        html,
+      });
+    }
     res.json({ success: true, data: orderRequest });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -691,5 +791,23 @@ exports.update = async (req, res) => {
     return res.json({ success: true, data: populatedOrder });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+// Get count of order requests needing approval (pending or rejected)
+exports.getPendingOrderRequestCount = async (req, res) => {
+  try {
+    const { Op } = require("sequelize");
+    // Only admin/staff see all, others see only their own
+    const where = {
+      status: { [Op.in]: ["pending"] },
+    };
+    if (!req.user || (req.user.role !== "admin" && req.user.role !== "staff")) {
+      where.requester_id = req.user?._id;
+    }
+    const count = await OrderRequest.count({ where });
+    res.json({ success: true, count });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 };

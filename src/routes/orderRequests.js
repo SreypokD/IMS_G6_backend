@@ -6,6 +6,7 @@ const authenticateToken = require('../middleware/auth');
 const { validateOrderRequest } = require('../middleware/orderRequestValidator');
 
 router.get('/', authenticateToken, orderRequestController.getAll);
+router.get('/pending/count', authenticateToken, orderRequestController.getPendingOrderRequestCount);
 router.post('/', authenticateToken, validateOrderRequest, orderRequestController.create);
 router.patch('/:id', authenticateToken, orderRequestController.update);
 router.patch('/:id/status', authenticateToken, orderRequestController.updateStatus);

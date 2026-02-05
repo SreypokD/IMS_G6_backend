@@ -22,6 +22,7 @@ app.use(express.json());
 
 // Import routes
 const authRoutes = require("./routes/auth");
+const passwordResetRoutes = require("./routes/passwordReset");
 const productRoutes = require("./routes/products");
 const categoryRoutes = require("./routes/categories");
 const supplierRoutes = require("./routes/suppliers");
@@ -48,6 +49,7 @@ app.use("/api/reports", reportsRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/password-reset", passwordResetRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/stocks", stockRoutes);
 
