@@ -31,9 +31,20 @@ exports.getAll = async (req, res) => {
       offset,
       order: [["_id", "DESC"]],
     });
+    const usersMapped = users.map((user) => {
+      let address = user.address;
+      if (typeof address === "string") {
+        try {
+          address = JSON.parse(address);
+        } catch {
+          address = {};
+        }
+      }
+      return { ...user.toJSON(), address: address || {} };
+    });
     res.json({
       success: true,
-      data: users,
+      data: usersMapped,
       pagination: { page, limit, totalItems, totalPages },
     });
   } catch (err) {

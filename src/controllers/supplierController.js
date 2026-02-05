@@ -16,7 +16,7 @@ exports.getAll = async (req, res) => {
         { company_name: { [Op.like]: `%${search}%` } },
         { contact_person: { [Op.like]: `%${search}%` } },
         { contact_email: { [Op.like]: `%${search}%` } },
-        { contact_phone: { [Op.like]: `%${search}%` } }
+        { contact_phone: { [Op.like]: `%${search}%` } },
       ];
     }
     if (status) {
@@ -42,11 +42,20 @@ exports.getAll = async (req, res) => {
     });
 
     // For each supplier, count products
-    const suppliersWithCount = await Promise.all(
+    const suppliersMapped = await Promise.all(
       suppliers.map(async (supplier) => {
         const count = await supplier.countProducts();
+        let address = supplier.address;
+        if (typeof address === "string") {
+          try {
+            address = JSON.parse(address);
+          } catch {
+            address = {};
+          }
+        }
         return {
           ...supplier.toJSON(),
+          address: address || {},
           products_count: count,
         };
       }),
@@ -54,7 +63,7 @@ exports.getAll = async (req, res) => {
 
     res.json({
       success: true,
-      data: suppliersWithCount,
+      data: suppliersMapped,
       pagination: { page, limit, totalItems, totalPages },
     });
   } catch (err) {

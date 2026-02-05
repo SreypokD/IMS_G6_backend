@@ -9,7 +9,15 @@ const refreshTokens = new Set(); // In-memory store for demo; use DB/Redis in pr
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, first_name, last_name, phone } = req.body;
+    let { email, password, first_name, last_name, phone, address } = req.body;
+    // Ensure address is always an object if provided as a JSON string
+    if (typeof address === "string") {
+      try {
+        address = JSON.parse(address);
+      } catch (e) {
+        address = null;
+      }
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     // Always assign 'customer' role and customer permissions
     // Find or create the 'customer' permission
@@ -36,25 +44,27 @@ exports.register = async (req, res) => {
       last_name,
       email,
       phone,
+      address: address && typeof address === "object" ? address : null,
       password: hashedPassword,
       role: "customer",
       permission_id: customerPermission._id,
     });
     // Fetch user with permission (role) object
-    const userWithPermission = await User.findByPk(user._id, {
+    const userMapped = await User.findByPk(user._id, {
       include: [{ model: Permission, as: "permission" }],
     });
     res.status(201).json({
       success: true,
       data: {
-        _id: userWithPermission._id,
-        email: userWithPermission.email,
-        phone: userWithPermission.phone,
-        role: userWithPermission.role,
-        first_name: userWithPermission.first_name,
-        last_name: userWithPermission.last_name,
-        permission: userWithPermission.permission,
-        profile: userWithPermission.profile,
+        _id: userMapped._id,
+        email: userMapped.email,
+        phone: userMapped.phone,
+        address: userMapped.address || {},
+        role: userMapped.role,
+        first_name: userMapped.first_name,
+        last_name: userMapped.last_name,
+        permission: userMapped.permission,
+        profile: userMapped.profile,
       },
     });
   } catch (err) {
