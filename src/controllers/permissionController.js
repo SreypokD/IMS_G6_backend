@@ -59,7 +59,19 @@ exports.update = async (req, res) => {
     const permission = await Permission.findByPk(req.params.id);
     if (!permission)
       return res.status(404).json({ error: "Permission not found" });
-    await permission.update(req.body);
+    // Ensure permissions is always an array, not a string
+    let updateData = { ...req.body };
+    if (typeof updateData.permissions === "string") {
+      try {
+        updateData.permissions = JSON.parse(updateData.permissions);
+      } catch {
+        updateData.permissions = [];
+      }
+    }
+    if (!Array.isArray(updateData.permissions)) {
+      updateData.permissions = [];
+    }
+    await permission.update(updateData);
     res.json({ success: true, data: permission });
   } catch (err) {
     res.status(400).json({ error: err.message });

@@ -123,6 +123,7 @@ exports.update = async (req, res) => {
       "phone",
       "address",
       "profile",
+      "permission_id",
     ];
     const updateData = {};
     for (const key of allowedFields) {
