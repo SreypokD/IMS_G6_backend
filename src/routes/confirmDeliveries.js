@@ -8,9 +8,9 @@ router.get("/", authenticateToken, (req, res) => {
   const search = req.query.search || "";
   // Support both approve_status and approve_request.status as query param
   const approve_status =
-    req.query.approve_status || req.query["approve_request.status"] || "";
+    req.query.approve_status || req.query["approve_request"] || "";
   const delivery_status =
-    req.query.delivery_status || req.query["confirm_delivery.status"] || "";
+    req.query.delivery_status || req.query["confirm_delivery"] || "";
   orderRequestController.getAll(req, res, {
     status,
     search,

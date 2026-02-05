@@ -8,7 +8,7 @@ exports.getAll = async (req, res) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const search = req.query.search || "";
-    const permission = req.query.permission || "";
+    const permission_id = req.query.permission_id || "";
     const offset = (page - 1) * limit;
     const where = {};
     if (search) {
@@ -20,8 +20,8 @@ exports.getAll = async (req, res) => {
         { role: { [Op.like]: `%${search}%` } },
       ];
     }
-    if (permission) {
-      where.permission_id = permission;
+    if (permission_id) {
+      where.permission_id = permission_id;
     }
     const totalItems = await User.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
