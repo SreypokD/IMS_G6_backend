@@ -271,20 +271,23 @@ exports.updateStatus = async (req, res) => {
         const requestDate = order.createdAt
           ? new Date(order.createdAt).toLocaleDateString()
           : "-";
-        let productLines = "";
+        // Fetch product details for each item and attach to item
         for (const item of orderItems) {
           const product = await Product.findByPk(item.product_id);
-          productLines += `* Product: ${product?.name}\n* Quantity: ${item.quantity}\n* Requested Date: ${requestDate}\n\n`;
+          item._productName = product ? product.name : "Unknown Product";
+        }
+        let productLines = "";
+        for (const item of orderItems) {
+          productLines += `* Product: ${item._productName}\n* Quantity: ${item.quantity}\n* Requested Date: ${requestDate}\n\n`;
         }
         const html = `
           <p>Dear ${requester.first_name + " " + requester.last_name},</p>
-          <p>We’re happy to inform you that your order request <strong>(Order ID: ${order._id})</strong> has been <strong>approved</strong>.</p>
+          <p>We’re happy to inform you that your order request has been <strong>approved</strong>.</p>
           <p><strong>Order Details:</strong></p>
           <ul>
             ${orderItems
               .map((item) => {
-                const product = item.product?.name;
-                return `<li>Product: ${product}, Quantity: ${item.quantity}, Requested Date: ${requestDate}</li>`;
+                return `<li>Product: ${item._productName}, Quantity: ${item.quantity}, Requested Date: ${requestDate}</li>`;
               })
               .join("")}
           </ul>
@@ -296,7 +299,7 @@ exports.updateStatus = async (req, res) => {
         await sendMail({
           to: requester.email,
           subject: "Order Request Approved",
-          text: `Dear ${requester.first_name + " " + requester.last_name},\n\nWe’re happy to inform you that your order request (Order ID: ${order._id}) has been approved.\n\nOrder Details:\n${productLines}\nOur inventory team is now processing your order. You will be notified once the items are prepared or dispatched.\n\nIf you have any questions or need further assistance, feel free to contact us.\n\nThank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
+          text: `Dear ${requester.first_name + " " + requester.last_name},\n\nWe’re happy to inform you that your order request has been approved.\n\nOrder Details:\n${productLines}\nOur inventory team is now processing your order. You will be notified once the items are prepared or dispatched.\n\nIf you have any questions or need further assistance, feel free to contact us.\n\nThank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
           html,
         });
       }
@@ -392,10 +395,30 @@ exports.updateStatus = async (req, res) => {
       if (requester && requester.email) {
         const companyName =
           process.env.COMPANY_NAME || "Stockify Inventory Management System";
+        const requestDate = order.createdAt
+          ? new Date(order.createdAt).toLocaleDateString()
+          : "-";
+        // Fetch product details for each item and attach to item
+        for (const item of orderItems) {
+          const product = await Product.findByPk(item.product_id);
+          item._productName = product ? product.name : "Unknown Product";
+        }
+        let productLines = "";
+        for (const item of orderItems) {
+          productLines += `* Product: ${item._productName}\n* Quantity: ${item.quantity}\n* Requested Date: ${requestDate}\n\n`;
+        }
         const html = `
           <p>Dear ${requester.first_name + " " + requester.last_name},</p>
-          <p>Thank you for submitting your order request <strong>(Order ID: ${order._id})</strong>.</p>
+          <p>Thank you for submitting your order request.</p>
           <p>After review, we regret to inform you that your request has been <strong>rejected</strong>.</p>
+          <p><strong>Order Details:</strong></p>
+          <ul>
+            ${orderItems
+              .map((item) => {
+                return `<li>Product: ${item._productName}, Quantity: ${item.quantity}, Requested Date: ${requestDate}</li>`;
+              })
+              .join("")}
+          </ul>
           <p><strong>Reason for Rejection:</strong><br/>${order.rejection_reason || "No reason provided."}</p>
           <p>You may submit a new request with updated details or contact the inventory administrator for further clarification.</p>
           <p>We appreciate your understanding and thank you for using our Inventory Management System.</p>
@@ -404,7 +427,7 @@ exports.updateStatus = async (req, res) => {
         await sendMail({
           to: requester.email,
           subject: "Order Request Rejected",
-          text: `Dear ${requester.first_name},\n\nThank you for submitting your order request (Order ID: ${order._id}).\n\nAfter review, we regret to inform you that your request has been rejected.\n\nReason for Rejection:\n${order.rejection_reason || "No reason provided."}\n\nYou may submit a new request with updated details or contact the inventory administrator for further clarification.\n\nWe appreciate your understanding and thank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
+          text: `Dear ${requester.first_name},\n\nThank you for submitting your order request.\n\nAfter review, we regret to inform you that your request has been rejected.\n\nOrder Details:\n${productLines}\nReason for Rejection:\n${order.rejection_reason || "No reason provided."}\n\nYou may submit a new request with updated details or contact the inventory administrator for further clarification.\n\nWe appreciate your understanding and thank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
           html,
         });
       }
@@ -679,7 +702,8 @@ exports.confirmDelivery = async (req, res) => {
       });
       for (const item of orderItems) {
         const product = await Product.findByPk(item.product_id);
-        productLines += `* Product: ${product?.name}\n* Quantity: ${item.quantity}\n`;
+        item._productName = product ? product.name : "Unknown Product";
+        productLines += `* Product: ${item._productName}\n* Quantity: ${item.quantity}\n`;
       }
       const html = `
         <p>Dear ${requester.first_name + " " + requester.last_name},</p>
@@ -688,8 +712,7 @@ exports.confirmDelivery = async (req, res) => {
         <ul>
           ${orderItems
             .map((item) => {
-              const product = item.product?.name;
-              return `<li>Product: ${product}, Quantity: ${item.quantity}</li>`;
+              return `<li>Product: ${item._productName}, Quantity: ${item.quantity}</li>`;
             })
             .join("")}
         </ul>
