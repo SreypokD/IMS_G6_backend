@@ -4,6 +4,7 @@ const { sequelize } = require("../src/models");
 const {
   User,
   Product,
+  Stock,
   Category,
   Supplier,
   Permission,
@@ -27,14 +28,23 @@ async function seed() {
     { name: "Food & Beverage", description: "Groceries and drinks" },
     { name: "Clothing", description: "Apparel and accessories" },
     { name: "Health & Beauty", description: "Personal care products" },
-    { name: "Sports & Outdoors", description: "Sporting goods and outdoor gear" },
+    {
+      name: "Sports & Outdoors",
+      description: "Sporting goods and outdoor gear",
+    },
     { name: "Automotive", description: "Car parts and accessories" },
     { name: "Toys & Games", description: "Children's toys and games" },
     { name: "Books & Media", description: "Books, music, and movies" },
     { name: "Office Supplies", description: "Supplies for office use" },
-    { name: "Cleaning Supplies", description: "Products for cleaning and maintenance" },
+    {
+      name: "Cleaning Supplies",
+      description: "Products for cleaning and maintenance",
+    },
     { name: "Pet Supplies", description: "Products for pets" },
-    { name: "Garden & Outdoor", description: "Gardening tools and outdoor equipment" },
+    {
+      name: "Garden & Outdoor",
+      description: "Gardening tools and outdoor equipment",
+    },
     { name: "Baby Products", description: "Products for babies and toddlers" },
     { name: "Hardware", description: "Tools and hardware supplies" },
     { name: "Software", description: "Computer software and licenses" },
@@ -49,7 +59,10 @@ async function seed() {
     { name: "Collectibles", description: "Collectible items and memorabilia" },
     { name: "Musical Instruments", description: "Instruments and music gear" },
     { name: "Industrial Supplies", description: "Supplies for industrial use" },
-    { name: "Medical Supplies", description: "Healthcare products and equipment" },
+    {
+      name: "Medical Supplies",
+      description: "Healthcare products and equipment",
+    },
   ]);
 
   // Seed suppliers
@@ -262,7 +275,7 @@ async function seed() {
       },
       payment_term: "Net 30",
       status: "Active",
-    }
+    },
   ]);
 
   // Seed permissions FIRST
@@ -382,7 +395,7 @@ async function seed() {
 
   // Now seed users
   const password = await bcrypt.hash("admin123", 10);
-  const adminUserRecord = await User.create({
+  const adminUser = await User.create({
     email: "admin@example.com",
     password,
     role: "admin",
@@ -402,7 +415,7 @@ async function seed() {
     permission_id: adminPermission._id,
   });
 
-  const staffUserRecord = await User.create({
+  const staffUser = await User.create({
     email: "staff@example.com",
     password,
     role: "staff",
@@ -423,7 +436,7 @@ async function seed() {
   });
 
   const customerPassword = await bcrypt.hash("customer123", 10);
-  const customerUserRecord = await User.create({
+  const customerUser = await User.create({
     email: "customer@example.com",
     password: customerPassword,
     role: "customer",
@@ -443,14 +456,14 @@ async function seed() {
     permission_id: customerPermission._id,
   });
 
-  // Now seed products
+  // seed products
   const products = await Product.bulkCreate([
     {
       code: "P001",
       name: "Laptop",
       description: "15-inch laptop",
       price: 1200,
-      stock: 10,
+      stock: 0,
       category_id: categories[0]._id,
       supplier_id: suppliers[0]._id,
     },
@@ -459,7 +472,7 @@ async function seed() {
       name: "Desk Chair",
       description: "Ergonomic chair",
       price: 150,
-      stock: 20,
+      stock: 0,
       category_id: categories[2]._id,
       supplier_id: suppliers[1]._id,
     },
@@ -468,7 +481,7 @@ async function seed() {
       name: "Notebook",
       description: "A4 ruled",
       price: 2,
-      stock: 100,
+      stock: 0,
       category_id: categories[1]._id,
       supplier_id: suppliers[1]._id,
     },
@@ -477,7 +490,7 @@ async function seed() {
       name: "Monitor",
       description: "24-inch LED monitor",
       price: 250,
-      stock: 15,
+      stock: 0,
       category_id: categories[0]._id,
       supplier_id: suppliers[0]._id,
     },
@@ -486,7 +499,7 @@ async function seed() {
       name: "Pen Set",
       description: "Set of 10 pens",
       price: 5,
-      stock: 200,
+      stock: 0,
       category_id: categories[1]._id,
       supplier_id: suppliers[1]._id,
     },
@@ -495,7 +508,7 @@ async function seed() {
       name: "Office Desk",
       description: "Wooden office desk",
       price: 300,
-      stock: 5,
+      stock: 0,
       category_id: categories[2]._id,
       supplier_id: suppliers[3]._id,
     },
@@ -504,7 +517,7 @@ async function seed() {
       name: "Smartphone",
       description: "Latest model smartphone",
       price: 800,
-      stock: 25,
+      stock: 0,
       category_id: categories[0]._id,
       supplier_id: suppliers[4]._id,
     },
@@ -513,7 +526,7 @@ async function seed() {
       name: "Stapler",
       description: "Standard office stapler",
       price: 10,
-      stock: 50,
+      stock: 0,
       category_id: categories[1]._id,
       supplier_id: suppliers[5]._id,
     },
@@ -522,7 +535,7 @@ async function seed() {
       name: "Headphones",
       description: "Noise-cancelling headphones",
       price: 150,
-      stock: 30,
+      stock: 0,
       category_id: categories[0]._id,
       supplier_id: suppliers[4]._id,
     },
@@ -531,7 +544,7 @@ async function seed() {
       name: "Whiteboard",
       description: "Magnetic whiteboard",
       price: 100,
-      stock: 10,
+      stock: 0,
       category_id: categories[2]._id,
       supplier_id: suppliers[3]._id,
     },
@@ -540,7 +553,7 @@ async function seed() {
       name: "Coffee Maker",
       description: "Automatic coffee maker",
       price: 80,
-      stock: 20,
+      stock: 0,
       category_id: categories[3]._id,
       supplier_id: suppliers[6]._id,
     },
@@ -549,7 +562,7 @@ async function seed() {
       name: "Water Bottle",
       description: "Insulated water bottle",
       price: 25,
-      stock: 100,
+      stock: 0,
       category_id: categories[3]._id,
       supplier_id: suppliers[6]._id,
     },
@@ -558,7 +571,7 @@ async function seed() {
       name: "Backpack",
       description: "Laptop backpack",
       price: 60,
-      stock: 40,
+      stock: 0,
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -567,7 +580,7 @@ async function seed() {
       name: "Sunglasses",
       description: "Polarized sunglasses",
       price: 120,
-      stock: 25,
+      stock: 0,
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -576,7 +589,7 @@ async function seed() {
       name: "Running Shoes",
       description: "Comfortable running shoes",
       price: 90,
-      stock: 30,
+      stock: 0,
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -585,7 +598,7 @@ async function seed() {
       name: "Shampoo",
       description: "Hair care shampoo",
       price: 15,
-      stock: 50,
+      stock: 0,
       category_id: categories[5]._id,
       supplier_id: suppliers[6]._id,
     },
@@ -594,15 +607,16 @@ async function seed() {
       name: "Conditioner",
       description: "Hair care conditioner",
       price: 15,
-      stock: 50,
+      stock: 0,
       category_id: categories[5]._id,
       supplier_id: suppliers[6]._id,
-    }, {
+    },
+    {
       code: "P018",
       name: "T-shirt",
       description: "Cotton t-shirt",
       price: 20,
-      stock: 100,
+      stock: 0,
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -611,7 +625,7 @@ async function seed() {
       name: "Jeans",
       description: "Denim jeans",
       price: 40,
-      stock: 50,
+      stock: 0,
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -620,16 +634,127 @@ async function seed() {
       name: "Jacket",
       description: "Winter jacket",
       price: 100,
-      stock: 20,
+      stock: 0,
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
-    }
+    },
   ]);
 
-  // Use the created user records for demo data
-  const adminUser = adminUserRecord;
-  const staffUser = staffUserRecord;
-  const customerUser = customerUserRecord;
+  // seed stocks
+  const stocks = await Stock.bulkCreate([
+    // Laptop (P001) - Stock: 10
+    {
+      product_id: products[0]._id,
+      user_id: adminUser._id,
+      batch_number: "B-LAP-001",
+      reason: "Purchase",
+      type: "in",
+      quantity: 12, // Bought 12
+      location: "Warehouse A",
+      completed_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+      note: "Initial purchase",
+      balance: 12,
+    },
+    {
+      product_id: products[0]._id,
+      user_id: staffUser._id,
+      batch_number: "B-LAP-001",
+      reason: "Sale",
+      type: "out",
+      quantity: 2, // Sold 2, Remaining: 10 (Matches Product stock)
+      location: "Store Front",
+      completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      note: "Customer sale",
+      balance: 10,
+    },
+
+    // Desk Chair (P002) - Stock: 20
+    {
+      product_id: products[1]._id,
+      user_id: adminUser._id,
+      batch_number: "B-CHR-001",
+      reason: "Purchase",
+      type: "in",
+      quantity: 20,
+      location: "Warehouse B",
+      completed_at: new Date(),
+      note: "Initial stock",
+      balance: 20,
+    },
+
+    // Notebook (P003) - Stock: 100
+    {
+      product_id: products[2]._id,
+      user_id: adminUser._id,
+      batch_number: "B-NB-001",
+      reason: "Purchase",
+      type: "in",
+      quantity: 100,
+      location: "Warehouse C",
+      completed_at: new Date(),
+      note: "Bulk purchase",
+      balance: 100,
+    },
+
+    // Monitor (P004) - Stock: 15
+    {
+      product_id: products[3]._id,
+      user_id: adminUser._id,
+      batch_number: "B-MON-001",
+      reason: "Purchase",
+      type: "in",
+      quantity: 15,
+      location: "Warehouse A",
+      completed_at: new Date(),
+      note: "Initial stock",
+      balance: 15,
+    },
+
+    // Smartphone (P007) - Stock: 25
+    {
+      product_id: products[6]._id,
+      user_id: adminUser._id,
+      batch_number: "B-PHN-001",
+      reason: "Purchase",
+      type: "in",
+      quantity: 30,
+      location: "Warehouse A",
+      completed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      note: "New shipment",
+      balance: 30,
+    },
+    {
+      product_id: products[6]._id,
+      user_id: staffUser._id,
+      batch_number: "B-PHN-001",
+      reason: "Damage",
+      type: "out",
+      quantity: 5, // Damaged 5, Remaining: 25
+      location: "Warehouse A",
+      completed_at: new Date(),
+      note: "Damaged during transport",
+      balance: 25,
+    },
+  ]);
+
+  // Update Product stock levels based on transactions
+  for (const stock of stocks) {
+    const product = products.find(p => p._id === stock.product_id);
+    if (product) {
+      if (stock.type === 'in') {
+        product.stock += stock.quantity;
+      } else {
+        product.stock -= stock.quantity;
+      }
+    }
+  }
+
+  // Save updated product stocks
+  for (const product of products) {
+    if (product.stock !== 0) { // Optimize: only update if changed
+        await Product.update({ stock: product.stock }, { where: { _id: product._id } });
+    }
+  }
 
   const orderRequests = await Promise.all([
     // Pending order by customer

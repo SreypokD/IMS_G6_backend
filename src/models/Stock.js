@@ -36,19 +36,27 @@ const Stock = sequelize.define(
     },
     balance: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 0,
+    },
+    batch_number: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    reason: {
+      type: DataTypes.ENUM("Purchase", "Sale", "Return", "Adjustment", "Damage", "Other"),
+      allowNull: true,
     },
     location: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    completed_at: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
     note: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+    completed_at: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
   },

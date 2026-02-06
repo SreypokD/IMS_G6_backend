@@ -1,9 +1,59 @@
 const { Op } = require("sequelize");
 const User = require("../models/User");
 const Product = require("../models/Product");
+const Stock = require("../models/Stock");
 const ActivityLog = require("../models/ActivityLog");
 const OrderRequest = require("../models/OrderRequest");
 const Supplier = require("../models/Supplier");
+const { sequelize } = require("../models");
+
+exports.trends = async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const trends = await Stock.findAll({
+      attributes: [
+        [sequelize.fn("DATE", sequelize.col("completed_at")), "date"],
+        "type",
+        [sequelize.fn("SUM", sequelize.col("quantity")), "total"],
+      ],
+      where: {
+        completed_at: {
+          [Op.gte]: sevenDaysAgo,
+        },
+      },
+      group: ["date", "type"],
+      order: [["date", "ASC"]],
+      raw: true,
+    });
+
+    // Process data to match chart format
+    const chartData = [];
+    const dateMap = new Map();
+
+    // Initialize last 7 days with 0
+    for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        dateMap.set(dateStr, { name: dateStr, in: 0, out: 0 });
+    }
+
+    trends.forEach(t => {
+        if(dateMap.has(t.date)) {
+            const entry = dateMap.get(t.date);
+            if(t.type === 'in') entry.in = Number(t.total);
+            else if(t.type === 'out') entry.out = Number(t.total);
+        }
+    });
+    
+    // Convert map to array and reverse to show oldest first
+    res.json({ success: true, data: Array.from(dateMap.values()).sort((a,b) => new Date(a.name) - new Date(b.name)) });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
 
 exports.inventorySummary = async (req, res) => {
   const totalSuppliers = await Supplier.count();
