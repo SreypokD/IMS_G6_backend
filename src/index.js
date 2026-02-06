@@ -64,7 +64,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 // Start server after DB connection
 const PORT = process.env.PORT || 5001;
 sequelize
-  .sync()
+  .sync({ alter: true })
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

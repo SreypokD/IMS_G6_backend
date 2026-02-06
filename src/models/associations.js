@@ -11,6 +11,7 @@ const Notification = require("./Notification");
 const ApproveRequest = require("./ApproveRequest");
 const ConfirmDelivery = require("./ConfirmDelivery");
 const Stock = require("./Stock");
+const SaleItem = require("./SaleItem");
 
 // ================= Associations =================
 
@@ -42,9 +43,19 @@ OrderRequestItem.belongsTo(Product, { foreignKey: "product_id", as: "product" })
 User.belongsTo(Permission, { foreignKey: "permission_id", as: "permission" });
 Permission.hasMany(User, { foreignKey: "permission_id", as: "users" });
 
-// Sale-Product
-Sale.belongsTo(Product, { foreignKey: "product_id", as: "product" });
-Product.hasMany(Sale, { foreignKey: "product_id", as: "sales" });
+
+
+// Sale-Customer (User)
+Sale.belongsTo(User, { foreignKey: "customer_id", as: "customer" });
+User.hasMany(Sale, { foreignKey: "customer_id", as: "sales" });
+
+// Sale-SaleItem
+Sale.hasMany(SaleItem, { foreignKey: "sale_id", as: "items" });
+SaleItem.belongsTo(Sale, { foreignKey: "sale_id", as: "sale" });
+
+// SaleItem-Product
+SaleItem.belongsTo(Product, { foreignKey: "product_id", as: "product" });
+Product.hasMany(SaleItem, { foreignKey: "product_id", as: "sale_items" });
 
 // ActivityLog-User
 ActivityLog.belongsTo(User, { foreignKey: "user_id", as: "user" });
