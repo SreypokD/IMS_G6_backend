@@ -310,7 +310,6 @@ async function seed() {
       "create_order_request",
       "update_order_request",
       "delete_order_request",
-      "post_order_request",
       // Approvals
       "view_approve_request",
       "update_approve_request",
@@ -322,13 +321,18 @@ async function seed() {
       "create_sale",
       "update_sale",
       "delete_sale",
+      // Expenses
+      "view_expense",
+      "create_expense",
+      "update_expense",
+      "delete_expense",
       // Order History
       "view_order_history",
       // Reports & Logs
-      "view_report",
-      "view_inventory_summary",
       "view_order_stats",
       "view_activity_log",
+      "view_report",
+      "view_inventory_summary",
       // Users
       "view_user",
       "create_user",
@@ -739,9 +743,9 @@ async function seed() {
 
   // Update Product stock levels based on transactions
   for (const stock of stocks) {
-    const product = products.find(p => p._id === stock.product_id);
+    const product = products.find((p) => p._id === stock.product_id);
     if (product) {
-      if (stock.type === 'in') {
+      if (stock.type === "in") {
         product.stock += stock.quantity;
       } else {
         product.stock -= stock.quantity;
@@ -751,8 +755,12 @@ async function seed() {
 
   // Save updated product stocks
   for (const product of products) {
-    if (product.stock !== 0) { // Optimize: only update if changed
-        await Product.update({ stock: product.stock }, { where: { _id: product._id } });
+    if (product.stock !== 0) {
+      // Optimize: only update if changed
+      await Product.update(
+        { stock: product.stock },
+        { where: { _id: product._id } },
+      );
     }
   }
 
