@@ -163,7 +163,6 @@ exports.refresh = (req, res) => {
 
 exports.profile = async (req, res) => {
   try {
-    // req.user is set by authenticateToken middleware
     const user = await User.findByPk(req.user._id, {
       attributes: [
         "_id",
@@ -172,6 +171,8 @@ exports.profile = async (req, res) => {
         "first_name",
         "last_name",
         "profile",
+        "phone",
+        "address",
         "createdAt",
         "updatedAt",
       ],
@@ -179,6 +180,14 @@ exports.profile = async (req, res) => {
     });
     if (!user)
       return res.status(404).json({ success: false, error: "User not found" });
+    // Parse address if it's a string
+    if (user.address && typeof user.address === "string") {
+      try {
+        user.address = JSON.parse(user.address);
+      } catch (e) {
+        // If parsing fails, leave as is
+      }
+    }
     res.json({ success: true, data: user });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

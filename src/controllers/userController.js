@@ -165,3 +165,60 @@ exports.remove = async (req, res) => {
   await user.destroy();
   res.json({ message: "Deleted" });
 };
+
+// Update own profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user._id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const allowedFields = [
+      "first_name",
+      "last_name",
+      "phone",
+      "address",
+      "profile",
+      "password",
+    ];
+
+    const updateData = {};
+    const bcrypt = require("bcryptjs");
+
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        if (key === "password") {
+          if (req.body.password && req.body.password.trim() !== "") {
+            updateData.password = await bcrypt.hash(req.body.password, 10);
+          }
+        } else if (
+          key === "address" &&
+          typeof req.body.address === "object" &&
+          !Array.isArray(req.body.address)
+        ) {
+          updateData.address = {
+            street: req.body.address.street || "",
+            house: req.body.address.house || "",
+            village: req.body.address.village || "",
+            commune: req.body.address.commune || "",
+            district: req.body.address.district || "",
+            province: req.body.address.province || "",
+            country: req.body.address.country || "",
+          };
+        } else {
+          updateData[key] = req.body[key];
+        }
+      }
+    }
+
+    await user.update(updateData);
+
+    // Fetch user with full permission objects to return updated data
+    const userWithPermissions = await User.findByPk(user._id, {
+      include: [{ model: Permission, as: "permission" }],
+    });
+
+    res.json({ success: true, data: userWithPermissions });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
