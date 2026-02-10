@@ -21,6 +21,7 @@ const Product = sequelize.define(
     description: { type: DataTypes.STRING },
     price: { type: DataTypes.FLOAT, allowNull: false },
     image: { type: DataTypes.STRING },
+    cost_price: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
     stock: { type: DataTypes.INTEGER, defaultValue: 0 },
     reserved_stock: { type: DataTypes.INTEGER, defaultValue: 0 },
     category_id: {
@@ -30,6 +31,8 @@ const Product = sequelize.define(
         model: "categories",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     supplier_id: {
       type: DataTypes.STRING(24),
@@ -38,6 +41,8 @@ const Product = sequelize.define(
         model: "suppliers",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
   },
   { timestamps: true, tableName: "products" },

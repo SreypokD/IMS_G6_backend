@@ -54,6 +54,8 @@ const User = sequelize.define(
         model: "permissions",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
   },
   {

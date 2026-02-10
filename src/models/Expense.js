@@ -2,17 +2,25 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("./index");
 const { generateObjectId } = require("../utils/objectId.util");
 
-const ActivityLog = sequelize.define(
-  "ActivityLog",
+const Expense = sequelize.define(
+  "Expense",
   {
     _id: {
       type: DataTypes.STRING(24),
       primaryKey: true,
       defaultValue: () => generateObjectId(),
     },
+    description: { type: DataTypes.STRING, allowNull: false },
+    amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+    category: {
+      type: DataTypes.STRING,
+      defaultValue: "Other",
+    },
+    date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    receipt_image: { type: DataTypes.STRING },
     user_id: {
       type: DataTypes.STRING(24),
-      allowNull: false,
+      allowNull: true,
       references: {
         model: "users",
         key: "_id",
@@ -20,12 +28,8 @@ const ActivityLog = sequelize.define(
       onDelete: "RESTRICT",
       onUpdate: "CASCADE",
     },
-    action: { type: DataTypes.STRING, allowNull: false },
-    details: { type: DataTypes.TEXT },
-    entity_type: { type: DataTypes.STRING },
-    entity_id: { type: DataTypes.STRING(24) },
   },
-  { timestamps: true, tableName: "activity_logs" },
+  { timestamps: true, tableName: "expenses" },
 );
 
-module.exports = ActivityLog;
+module.exports = Expense;

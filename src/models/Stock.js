@@ -17,6 +17,8 @@ const Stock = sequelize.define(
         model: "products",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     user_id: {
       type: DataTypes.STRING(24),
@@ -25,6 +27,8 @@ const Stock = sequelize.define(
         model: "users",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     type: {
       type: DataTypes.ENUM("in", "out"),
@@ -44,7 +48,14 @@ const Stock = sequelize.define(
       allowNull: true,
     },
     reason: {
-      type: DataTypes.ENUM("Purchase", "Sale", "Return", "Adjustment", "Damage", "Other"),
+      type: DataTypes.ENUM(
+        "Purchase",
+        "Sale",
+        "Return",
+        "Adjustment",
+        "Damage",
+        "Other",
+      ),
       allowNull: true,
     },
     location: {

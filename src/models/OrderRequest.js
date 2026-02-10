@@ -17,6 +17,8 @@ const OrderRequest = sequelize.define(
         model: "suppliers",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     status: {
       type: DataTypes.ENUM(
@@ -41,6 +43,8 @@ const OrderRequest = sequelize.define(
         model: "users",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     approved_by: DataTypes.STRING(24),
     approved_date: { type: DataTypes.DATE },

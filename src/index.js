@@ -36,6 +36,7 @@ const confirmDeliveriesRoutes = require("./routes/confirmDeliveries");
 const salesRoutes = require("./routes/sales");
 const stockRoutes = require("./routes/stocks");
 const notificationsRoutes = require("./routes/notifications");
+const expenseRoutes = require("./routes/expenses");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
@@ -52,6 +53,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/password-reset", passwordResetRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/stocks", stockRoutes);
+app.use("/api/expenses", expenseRoutes);
 
 // Health check
 app.get("/", (req, res) => {
@@ -64,7 +66,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 // Start server after DB connection
 const PORT = process.env.PORT || 5001;
 sequelize
-  .sync({ alter: true })
+  .sync()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

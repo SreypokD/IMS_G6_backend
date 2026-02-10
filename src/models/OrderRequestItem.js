@@ -17,6 +17,8 @@ const OrderRequestItem = sequelize.define(
         model: "order_requests",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     product_id: {
       type: DataTypes.STRING(24),
@@ -25,6 +27,8 @@ const OrderRequestItem = sequelize.define(
         model: "products",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     quantity: {
       type: DataTypes.INTEGER,

@@ -17,6 +17,8 @@ const Notification = sequelize.define(
         model: "users",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     type: {
       type: DataTypes.STRING,

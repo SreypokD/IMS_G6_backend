@@ -12,41 +12,90 @@ const ApproveRequest = require("./ApproveRequest");
 const ConfirmDelivery = require("./ConfirmDelivery");
 const Stock = require("./Stock");
 const SaleItem = require("./SaleItem");
+const Expense = require("./Expense");
 
 // ================= Associations =================
 
 // Product-Category
-Product.belongsTo(Category, { foreignKey: "category_id", as: "category" });
+Product.belongsTo(Category, {
+  foreignKey: "category_id",
+  as: "category",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
 Category.hasMany(Product, { foreignKey: "category_id", as: "products" });
 
 // Product-Supplier
-Product.belongsTo(Supplier, { foreignKey: "supplier_id", as: "supplier" });
+Product.belongsTo(Supplier, {
+  foreignKey: "supplier_id",
+  as: "supplier",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
 Supplier.hasMany(Product, { foreignKey: "supplier_id", as: "products" });
 
 // OrderRequest-Supplier
-OrderRequest.belongsTo(Supplier, { foreignKey: "supplier_id", as: "supplier" });
-Supplier.hasMany(OrderRequest, { foreignKey: "supplier_id", as: "order_requests" });
+OrderRequest.belongsTo(Supplier, {
+  foreignKey: "supplier_id",
+  as: "supplier",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
+Supplier.hasMany(OrderRequest, {
+  foreignKey: "supplier_id",
+  as: "order_requests",
+});
 
 // OrderRequest-Requester (User)
-OrderRequest.belongsTo(User, { foreignKey: "requester_id", as: "requester" });
-User.hasMany(OrderRequest, { foreignKey: "requester_id", as: "order_requests" });
+OrderRequest.belongsTo(User, {
+  foreignKey: "requester_id",
+  as: "requester",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
+User.hasMany(OrderRequest, {
+  foreignKey: "requester_id",
+  as: "order_requests",
+});
 
 // OrderRequest-OrderRequestItem (Products)
-OrderRequest.hasMany(OrderRequestItem, { foreignKey: "order_request_id", as: "items" });
-OrderRequestItem.belongsTo(OrderRequest, { foreignKey: "order_request_id", as: "order_request" });
+OrderRequest.hasMany(OrderRequestItem, {
+  foreignKey: "order_request_id",
+  as: "items",
+});
+OrderRequestItem.belongsTo(OrderRequest, {
+  foreignKey: "order_request_id",
+  as: "order_request",
+});
 
 // Product-OrderRequestItem
-Product.hasMany(OrderRequestItem, { foreignKey: "product_id", as: "order_request_items" });
-OrderRequestItem.belongsTo(Product, { foreignKey: "product_id", as: "product" });
+Product.hasMany(OrderRequestItem, {
+  foreignKey: "product_id",
+  as: "order_request_items",
+});
+OrderRequestItem.belongsTo(Product, {
+  foreignKey: "product_id",
+  as: "product",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
 
 // User-Permission
-User.belongsTo(Permission, { foreignKey: "permission_id", as: "permission" });
+User.belongsTo(Permission, {
+  foreignKey: "permission_id",
+  as: "permission",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
 Permission.hasMany(User, { foreignKey: "permission_id", as: "users" });
 
-
-
 // Sale-Customer (User)
-Sale.belongsTo(User, { foreignKey: "customer_id", as: "customer" });
+Sale.belongsTo(User, {
+  foreignKey: "customer_id",
+  as: "customer",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
 User.hasMany(Sale, { foreignKey: "customer_id", as: "sales" });
 
 // Sale-SaleItem
@@ -54,7 +103,12 @@ Sale.hasMany(SaleItem, { foreignKey: "sale_id", as: "items" });
 SaleItem.belongsTo(Sale, { foreignKey: "sale_id", as: "sale" });
 
 // SaleItem-Product
-SaleItem.belongsTo(Product, { foreignKey: "product_id", as: "product" });
+SaleItem.belongsTo(Product, {
+  foreignKey: "product_id",
+  as: "product",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
 Product.hasMany(SaleItem, { foreignKey: "product_id", as: "sale_items" });
 
 // ActivityLog-User
@@ -66,20 +120,51 @@ User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
 Notification.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
 // ApproveRequest-OrderRequest
-OrderRequest.hasOne(ApproveRequest, { foreignKey: "order_request_id", as: "approve_request" });
-ApproveRequest.belongsTo(OrderRequest, { foreignKey: "order_request_id", as: "order_request" });
+OrderRequest.hasOne(ApproveRequest, {
+  foreignKey: "order_request_id",
+  as: "approve_request",
+});
+ApproveRequest.belongsTo(OrderRequest, {
+  foreignKey: "order_request_id",
+  as: "order_request",
+});
 
 // ConfirmDelivery-OrderRequest
-OrderRequest.hasOne(ConfirmDelivery, { foreignKey: "order_request_id", as: "confirm_delivery" });
-ConfirmDelivery.belongsTo(OrderRequest, { foreignKey: "order_request_id", as: "order_request" });
+OrderRequest.hasOne(ConfirmDelivery, {
+  foreignKey: "order_request_id",
+  as: "confirm_delivery",
+});
+ConfirmDelivery.belongsTo(OrderRequest, {
+  foreignKey: "order_request_id",
+  as: "order_request",
+});
 
 // Stock-Product
-Stock.belongsTo(Product, { foreignKey: "product_id", as: "product" });
+Stock.belongsTo(Product, {
+  foreignKey: "product_id",
+  as: "product",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
 Product.hasMany(Stock, { foreignKey: "product_id", as: "stocks" });
 
 // Stock-User
-Stock.belongsTo(User, { foreignKey: "user_id", as: "user" });
+Stock.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
 User.hasMany(Stock, { foreignKey: "user_id", as: "stocks" });
+
+// Expense-User
+Expense.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+  onDelete: "RESTRICT",
+  onUpdate: "CASCADE",
+});
+User.hasMany(Expense, { foreignKey: "user_id", as: "expenses" });
 
 module.exports = {
   User,
@@ -95,4 +180,5 @@ module.exports = {
   ApproveRequest,
   ConfirmDelivery,
   Stock,
+  Expense,
 };

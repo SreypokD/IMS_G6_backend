@@ -17,17 +17,20 @@ exports.getAll = async (req, res) => {
     if (status && status !== "All Status") where.status = status;
     if (customer && customer !== "All Customers") where.customer_id = customer;
     if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
       where.completed_at = {
-        [Op.between]: [new Date(startDate), new Date(endDate)],
+        [Op.between]: [start, end],
       };
     }
 
     // Optional: Add simple search by ID or Note
     if (search) {
-       where[Op.or] = [
-         { _id: { [Op.like]: `%${search}%` } },
-         { notes: { [Op.like]: `%${search}%` } }
-       ];
+      where[Op.or] = [
+        { _id: { [Op.like]: `%${search}%` } },
+        { notes: { [Op.like]: `%${search}%` } },
+      ];
     }
 
     const totalItems = await Sale.count({ where });
@@ -95,7 +98,7 @@ exports.create = async (req, res) => {
         status: "Completed",
         completed_at: new Date(),
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     for (const item of salesItems) {
@@ -103,6 +106,7 @@ exports.create = async (req, res) => {
       const quantity = Number(item.quantity) || 0;
       const price = Number(item.price) || 0;
       const discount = Number(item.discount) || 0;
+      // cost_price will be fetched from product
 
       if (!productId || quantity <= 0) continue;
 
@@ -126,8 +130,9 @@ exports.create = async (req, res) => {
           quantity: quantity,
           price: price,
           discount: discount,
+          cost_price: product.cost_price, // Snapshot cost at time of sale
         },
-        { transaction: t }
+        { transaction: t },
       );
 
       // 4. Create Stock Out Record
@@ -142,7 +147,7 @@ exports.create = async (req, res) => {
           note: `Sale #${sale._id} - ${notes || "Direct Sale"}`,
           completed_at: new Date(),
         },
-        { transaction: t }
+        { transaction: t },
       );
     }
 
@@ -179,68 +184,77 @@ exports.update = async (req, res) => {
         if (product) {
           await product.update(
             { stock: product.stock + item.quantity },
-            { transaction: t }
+            { transaction: t },
           );
 
-           // Log Stock In (Revert) - Optional but good for tracking
-           await Stock.create({
-             product_id: item.product_id,
-             user_id: req.user ? req.user._id : null,
-             type: "in",
-             quantity: item.quantity,
-             balance: product.stock + item.quantity, // Balance after revert
-             location: "Storefront",
-             note: `Sale #${sale._id} Updated (Revert)`,
-             completed_at: new Date()
-           }, { transaction: t });
+          // Log Stock In (Revert) - Optional but good for tracking
+          await Stock.create(
+            {
+              product_id: item.product_id,
+              user_id: req.user ? req.user._id : null,
+              type: "in",
+              quantity: item.quantity,
+              balance: product.stock + item.quantity, // Balance after revert
+              location: "Storefront",
+              note: `Sale #${sale._id} Updated (Revert)`,
+              completed_at: new Date(),
+            },
+            { transaction: t },
+          );
         }
         await item.destroy({ transaction: t });
       }
     }
 
     // 2. Normalize and Create New Items
-    const salesItems = items && Array.isArray(items) ? items : []; 
-    // If no items provided in update, maybe we should keep old ones? 
-    // But safely, we assume full replace if provided. 
-    // If items is undefined/null, we might want to throw error or skip item update? 
-    // Assuming 'items' is always sent with full list from frontend.
+    const salesItems = items && Array.isArray(items) ? items : [];
 
-    if (items) { // Only update items if 'items' field is present
-        for (const item of salesItems) {
-            const productId = item.product_id || item.product;
-            const quantity = Number(item.quantity) || 0;
-            const price = Number(item.price) || 0;
-            const discount = Number(item.discount) || 0;
-    
-            if (!productId || quantity <= 0) continue;
-    
-            const product = await Product.findByPk(productId, { transaction: t });
-            if (!product) throw new Error(`Product not found: ${productId}`);
-            if (product.stock < quantity) throw new Error(`Insufficient stock for product: ${product.name}`);
-    
-            const newStock = product.stock - quantity;
-            await product.update({ stock: newStock }, { transaction: t });
-    
-            await require("../models/SaleItem").create({
-                sale_id: sale._id,
-                product_id: productId,
-                quantity,
-                price,
-                discount
-            }, { transaction: t });
-    
-            // Log Stock Out
-            await Stock.create({
-                 product_id: productId,
-                 user_id: req.user ? req.user._id : null,
-                 type: "out",
-                 quantity: quantity,
-                 balance: newStock,
-                 location: "Storefront",
-                 note: `Sale #${sale._id} Updated`,
-                 completed_at: new Date()
-            }, { transaction: t });
-        }
+    if (items) {
+      // Only update items if 'items' field is present
+      for (const item of salesItems) {
+        const productId = item.product_id || item.product;
+        const quantity = Number(item.quantity) || 0;
+        const price = Number(item.price) || 0;
+        const discount = Number(item.discount) || 0;
+        // cost_price fetched from product
+
+        if (!productId || quantity <= 0) continue;
+
+        const product = await Product.findByPk(productId, { transaction: t });
+        if (!product) throw new Error(`Product not found: ${productId}`);
+        if (product.stock < quantity)
+          throw new Error(`Insufficient stock for product: ${product.name}`);
+
+        const newStock = product.stock - quantity;
+        await product.update({ stock: newStock }, { transaction: t });
+
+        await require("../models/SaleItem").create(
+          {
+            sale_id: sale._id,
+            product_id: productId,
+            quantity,
+            price,
+            discount,
+            cost_price: product.cost_price, // Snapshot cost
+          },
+          { transaction: t },
+        );
+
+        // Log Stock Out
+        await Stock.create(
+          {
+            product_id: productId,
+            user_id: req.user ? req.user._id : null,
+            type: "out",
+            quantity: quantity,
+            balance: newStock,
+            location: "Storefront",
+            note: `Sale #${sale._id} Updated`,
+            completed_at: new Date(),
+          },
+          { transaction: t },
+        );
+      }
     }
 
     // 3. Update Sale Header
@@ -251,17 +265,21 @@ exports.update = async (req, res) => {
         notes: notes !== undefined ? notes : sale.notes,
         status: status || sale.status,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     await t.commit();
-    
+
     // Fetch updated sale with items to return
     const updatedSale = await Sale.findByPk(req.params.id, {
-        include: [
-            { model: require("../models/SaleItem"), as: "items", include: [{ model: Product, as: "product" }] },
-            { model: User, as: "customer" }
-        ]
+      include: [
+        {
+          model: require("../models/SaleItem"),
+          as: "items",
+          include: [{ model: Product, as: "product" }],
+        },
+        { model: User, as: "customer" },
+      ],
     });
 
     res.json({ success: true, data: updatedSale });
@@ -293,19 +311,22 @@ exports.remove = async (req, res) => {
         if (product) {
           await product.update(
             { stock: product.stock + item.quantity },
-            { transaction: t }
+            { transaction: t },
           );
 
-          await Stock.create({
-             product_id: item.product_id,
-             user_id: req.user ? req.user._id : null,
-             type: "in",
-             quantity: item.quantity,
-             balance: product.stock + item.quantity,
-             location: "Storefront",
-             note: `Sale #${sale._id} Deleted (Revert)`,
-             completed_at: new Date()
-           }, { transaction: t });
+          await Stock.create(
+            {
+              product_id: item.product_id,
+              user_id: req.user ? req.user._id : null,
+              type: "in",
+              quantity: item.quantity,
+              balance: product.stock + item.quantity,
+              location: "Storefront",
+              note: `Sale #${sale._id} Deleted (Revert)`,
+              completed_at: new Date(),
+            },
+            { transaction: t },
+          );
         }
         await item.destroy({ transaction: t });
       }

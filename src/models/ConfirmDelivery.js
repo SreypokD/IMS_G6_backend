@@ -17,6 +17,8 @@ const ConfirmDelivery = sequelize.define(
         model: "order_requests",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     status: { type: DataTypes.STRING, defaultValue: "approved" },
     delivery_date: { type: DataTypes.DATE },

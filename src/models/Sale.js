@@ -10,7 +10,16 @@ const Sale = sequelize.define(
       primaryKey: true,
       defaultValue: () => generateObjectId(),
     },
-    customer_id: { type: DataTypes.STRING(24), allowNull: true },
+    customer_id: {
+      type: DataTypes.STRING(24),
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "_id",
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
+    },
     payment_method: { type: DataTypes.STRING, defaultValue: "Cash" },
     notes: { type: DataTypes.TEXT },
     status: { type: DataTypes.STRING, defaultValue: "Completed" },

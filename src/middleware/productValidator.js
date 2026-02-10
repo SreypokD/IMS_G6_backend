@@ -21,6 +21,10 @@ const validateProduct = [
   body("stock")
     .isInt({ min: 0 })
     .withMessage("Stock must be a non-negative integer"),
+  body("cost_price")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Cost Price must be a non-negative number"),
 ];
 
 module.exports = {

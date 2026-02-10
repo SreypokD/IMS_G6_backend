@@ -17,6 +17,8 @@ const ApproveRequest = sequelize.define(
         model: "order_requests",
         key: "_id",
       },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
     status: { type: DataTypes.STRING, defaultValue: "pending" },
     admin_remarks: { type: DataTypes.STRING },

@@ -31,12 +31,22 @@ exports.getAll = async (req, res) => {
       search,
       approve_status,
       delivery_status,
+      startDate,
+      endDate,
     } = req.query;
     const { Op } = require("sequelize");
     const where = {};
     if (status) where.status = status;
     if (supplier_id) where.supplier_id = supplier_id;
     if (requester_id) where.requester_id = requester_id;
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      where.createdAt = {
+        [Op.between]: [start, end],
+      };
+    }
     if (search) {
       // Search in notes, customer_remark, admin_remark
       where[Op.or] = [
