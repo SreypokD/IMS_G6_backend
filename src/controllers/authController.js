@@ -163,7 +163,6 @@ exports.refresh = (req, res) => {
 
 exports.profile = async (req, res) => {
   try {
-    // req.user is set by authenticateToken middleware
     const user = await User.findByPk(req.user._id, {
       attributes: [
         "_id",
@@ -174,6 +173,8 @@ exports.profile = async (req, res) => {
         "phone",
         "address",
         "profile",
+        "phone",
+        "address",
         "createdAt",
         "updatedAt",
       ],
@@ -190,8 +191,11 @@ exports.profile = async (req, res) => {
         address = {};
       }
     }
-    
-    res.json({ success: true, data: { ...user.toJSON(), address: address || {} } });
+
+    res.json({
+      success: true,
+      data: { ...user.toJSON(), address: address || {} },
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
