@@ -8,6 +8,8 @@ const ApproveRequest = require("../models/ApproveRequest");
 const ConfirmDelivery = require("../models/ConfirmDelivery");
 const Stock = require("../models/Stock");
 const OrderRequestItem = require("../models/OrderRequestItem");
+const Permission = require("../models/Permission");
+
 const { sendMail } = require("../utils/mail.util");
 
 exports.getAll = async (req, res) => {
@@ -151,6 +153,31 @@ exports.create = async (req, res) => {
         { model: ConfirmDelivery, as: "confirm_delivery" },
       ],
     });
+
+    // Notify staff with 'update_approve_request' permission about new order
+    const staffs = await User.findAll({
+      include: [{ model: Permission, as: "permission" }],
+    });
+
+    // Filter users who have the 'update_approve_request' permission
+    const staffToNotify = staffs.filter(
+      (user) =>
+        user.permission &&
+        user.permission.permissions &&
+        user.permission.permissions.includes("update_approve_request"),
+    );
+
+    for (const staff of staffToNotify) {
+      await Notification.create({
+        user_id: staff._id,
+        type: "new_order_request",
+        message: `New order request from ${req.user.first_name} ${req.user.last_name}`,
+        entity_type: "Order Request",
+        entity_id: order._id,
+        read: false,
+      });
+    }
+
     res.status(201).json({ success: true, data: populated });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -270,6 +297,33 @@ exports.updateStatus = async (req, res) => {
         entity_type: "Order Request",
         entity_id: order._id,
       });
+
+      // Notify staff with 'update_confirm_delivery' permission
+      const staffs = await User.findAll({
+        include: [{ model: Permission, as: "permission" }],
+      });
+
+      const deliveryStaff = staffs.filter(
+        (user) =>
+          user.permission &&
+          user.permission.permissions &&
+          user.permission.permissions.includes("view_confirm_delivery") &&
+          user.permission.permissions.includes("update_confirm_delivery"),
+      );
+
+      for (const staff of deliveryStaff) {
+        if (String(staff._id) !== String(user_id)) {
+          // Don't notify the approver if they are admin
+          await Notification.create({
+            user_id: staff._id,
+            type: "pending_delivery",
+            message: `Order #${order._id} approved and pending delivery confirmation.`,
+            entity_type: "Order Request",
+            entity_id: order._id,
+            read: false,
+          });
+        }
+      }
       // Send email to requester
       const requester = await User.findByPk(order.requester_id);
       if (requester && requester.email) {
