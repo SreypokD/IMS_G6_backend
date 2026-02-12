@@ -8,5 +8,5 @@ router.get('/order-stats', authenticateToken, reportController.orderStats);
 router.get('/activity-logs', authenticateToken, reportController.activityLogs);
 router.get('/trends', authenticateToken, reportController.trends);
 router.get('/financial-summary', authenticateToken, reportController.financialSummary);
- 
+
 module.exports = router;

@@ -34,7 +34,7 @@ exports.getAll = async (req, res) => {
       startDate,
       endDate,
     } = req.query;
-    const { Op } = require("sequelize");
+    const { Op, Sequelize } = require("sequelize");
     const where = {};
     if (status) where.status = status;
     if (supplier_id) where.supplier_id = supplier_id;
@@ -48,8 +48,16 @@ exports.getAll = async (req, res) => {
       };
     }
     if (search) {
-      // Search in notes, customer_remark, admin_remark
+      // Search in match requester, product name, quantity, notes, customer_remark, admin_remark
       where[Op.or] = [
+        { "$requester.first_name$": { [Op.like]: `%${search}%` } },
+        { "$requester.last_name$": { [Op.like]: `%${search}%` } },
+        { "$items.product.name$": { [Op.like]: `%${search}%` } },
+        // Cast quantity to string for search
+        Sequelize.where(
+          Sequelize.cast(Sequelize.col("items.quantity"), "char"),
+          { [Op.like]: `%${search}%` },
+        ),
         { notes: { [Op.like]: `%${search}%` } },
         { customer_remark: { [Op.like]: `%${search}%` } },
         { admin_remark: { [Op.like]: `%${search}%` } },

@@ -12,8 +12,19 @@ const { sequelize } = require("../models");
 
 exports.trends = async (req, res) => {
   try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const { from, to } = req.query;
+    let startDate, endDate;
+
+    if (from && to) {
+      startDate = new Date(from);
+      endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999);
+    } else {
+      // Default to last 7 days if no range provided
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(endDate.getDate() - 7);
+    }
 
     const trends = await Stock.findAll({
       attributes: [
@@ -23,7 +34,7 @@ exports.trends = async (req, res) => {
       ],
       where: {
         completed_at: {
-          [Op.gte]: sevenDaysAgo,
+          [Op.between]: [startDate, endDate],
         },
       },
       group: ["date", "type"],
@@ -35,10 +46,12 @@ exports.trends = async (req, res) => {
     const chartData = [];
     const dateMap = new Map();
 
-    // Initialize last 7 days with 0
-    for (let i = 0; i < 7; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
+    // Generate date range
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
       const dateStr = d.toISOString().split("T")[0];
       dateMap.set(dateStr, { name: dateStr, in: 0, out: 0 });
     }
@@ -51,12 +64,9 @@ exports.trends = async (req, res) => {
       }
     });
 
-    // Convert map to array and reverse to show oldest first
     res.json({
       success: true,
-      data: Array.from(dateMap.values()).sort(
-        (a, b) => new Date(a.name) - new Date(b.name),
-      ),
+      data: Array.from(dateMap.values()),
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

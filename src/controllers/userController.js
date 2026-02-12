@@ -84,7 +84,6 @@ exports.create = async (req, res) => {
         commune: data.address.commune || "",
         district: data.address.district || "",
         province: data.address.province || "",
-        country: data.address.country || "",
       };
     }
     if (data.password) {
@@ -140,7 +139,6 @@ exports.update = async (req, res) => {
             commune: req.body.address.commune || "",
             district: req.body.address.district || "",
             province: req.body.address.province || "",
-            country: req.body.address.country || "",
           };
         } else {
           updateData[key] = req.body[key];
@@ -164,4 +162,85 @@ exports.remove = async (req, res) => {
   if (!user) return res.status(404).json({ error: "Not found" });
   await user.destroy();
   res.json({ message: "Deleted" });
+};
+
+// Reset password (admin)
+exports.resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: "Password must be at least 6 characters long",
+      });
+    }
+
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    const bcrypt = require("bcryptjs");
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await user.update({ password: hashedPassword });
+
+    res.json({ success: true, message: "Password reset successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// Update profile (self)
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user._id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const allowedFields = [
+      "first_name",
+      "last_name",
+      "phone",
+      "address",
+      "profile",
+      "password", // Allow password update
+    ];
+
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        if (key === "password") {
+          if (req.body.password && req.body.password.length >= 6) {
+            const bcrypt = require("bcryptjs");
+            updateData.password = await bcrypt.hash(req.body.password, 10);
+          }
+        } else if (
+          key === "address" &&
+          typeof req.body.address === "object" &&
+          !Array.isArray(req.body.address)
+        ) {
+          updateData.address = {
+            street: req.body.address.street || "",
+            house: req.body.address.house || "",
+            village: req.body.address.village || "",
+            commune: req.body.address.commune || "",
+            district: req.body.address.district || "",
+            province: req.body.address.province || "",
+          };
+        } else {
+          updateData[key] = req.body[key];
+        }
+      }
+    }
+
+    await user.update(updateData);
+
+    // Return updated user info (exclude password)
+    const updatedUser = user.toJSON();
+    delete updatedUser.password;
+
+    res.json({ success: true, data: updatedUser });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };

@@ -171,6 +171,8 @@ exports.profile = async (req, res) => {
         "role",
         "first_name",
         "last_name",
+        "phone",
+        "address",
         "profile",
         "createdAt",
         "updatedAt",
@@ -179,7 +181,17 @@ exports.profile = async (req, res) => {
     });
     if (!user)
       return res.status(404).json({ success: false, error: "User not found" });
-    res.json({ success: true, data: user });
+
+    let address = user.address;
+    if (typeof address === "string") {
+      try {
+        address = JSON.parse(address);
+      } catch (e) {
+        address = {};
+      }
+    }
+    
+    res.json({ success: true, data: { ...user.toJSON(), address: address || {} } });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -94,11 +94,32 @@ exports.create = async (req, res) => {
     }
 
     // Calculate new stock level
+    // Calculate new stock level and cost
     let newStock = product.stock;
+    const updateData = {};
+
     if (type === "in") {
-      newStock += Number(quantity);
+      const addedQty = Number(quantity);
+
+      // Calculate Weighted Average Cost (WAC) if cost provided
+      if (req.body.cost_price !== undefined) {
+        const currentCost = Number(product.cost_price || 0);
+        const currentStock = Number(product.stock || 0);
+        const newCost = Number(req.body.cost_price);
+
+        // Avoid division by zero
+        const totalQty = currentStock + addedQty;
+        if (totalQty > 0) {
+          const wac =
+            (currentStock * currentCost + addedQty * newCost) / totalQty;
+          updateData.cost_price = Number(wac.toFixed(2));
+        } else {
+          updateData.cost_price = newCost;
+        }
+      }
+
+      newStock += addedQty;
     } else {
-      // Assuming 'out' if not 'in' based on the provided snippet, but original had 'else if (type === "out")' and 'else' for invalid type.
       if (product.stock < quantity) {
         await transaction.rollback();
         return res.status(400).json({ error: "Insufficient stock" });
@@ -106,8 +127,8 @@ exports.create = async (req, res) => {
       newStock -= Number(quantity);
     }
 
-    // Update product stock
-    await product.update({ stock: newStock }, { transaction });
+    updateData.stock = newStock;
+    await product.update(updateData, { transaction });
 
     // Create stock record
     const stock = await Stock.create(
