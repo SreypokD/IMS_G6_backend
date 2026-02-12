@@ -1,6 +1,7 @@
 const Product = require("../models/Product");
 const Category = require("../models/Category");
 const Supplier = require("../models/Supplier");
+const Stock = require("../models/Stock");
 const { generateCode } = require("../utils/code.util");
 const { Op } = require("sequelize");
 
@@ -101,6 +102,22 @@ exports.create = async (req, res) => {
       req.body.code = generateCode(lastNumber, "P");
     }
     const product = await Product.create(req.body);
+
+    // If initial stock is provided, create a stock transaction
+    if (req.body.stock && Number(req.body.stock) > 0) {
+      await Stock.create({
+        product_id: product._id,
+        user_id: req.user._id,
+        type: "in",
+        quantity: Number(req.body.stock),
+        balance: Number(req.body.stock),
+        reason: "Other",
+        note: "Initial Stock",
+        location: "Main Warehouse",
+        completed_at: new Date(),
+      });
+    }
+
     res.status(201).json({ success: true, data: product });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -118,6 +135,12 @@ exports.update = async (req, res) => {
       req.body.supplier_id = req.body.supplier;
       delete req.body.supplier;
     }
+    
+    // Protect stock from direct update - use Stock In/Out instead
+    if (req.body.stock !== undefined) {
+      delete req.body.stock;
+    }
+
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ error: "Not found" });
     await product.update(req.body);

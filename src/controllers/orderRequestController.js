@@ -213,7 +213,7 @@ exports.updateStatus = async (req, res) => {
         }
       }
 
-      // Reserve stock and create sales/stock records for all items
+      // Reserve stock and create sales records for all items
       for (const item of orderItems) {
         const product = await Product.findByPk(item.product_id);
         product.reserved_stock += item.quantity;
@@ -223,16 +223,6 @@ exports.updateStatus = async (req, res) => {
           product_id: product._id,
           quantity: item.quantity,
           status: "processing",
-        });
-        await Stock.create({
-          product_id: product._id,
-          user_id,
-          type: "out",
-          quantity: item.quantity,
-          balance: product.stock - product.reserved_stock, // show available after reservation
-          location: order.location || null,
-          completed_at: new Date(),
-          note: `Reserved for order approval (#${order._id})`,
         });
       }
 
@@ -663,6 +653,46 @@ exports.confirmDelivery = async (req, res) => {
     }
     order.status = "completed";
     await order.save();
+
+    // Deduct stock and update sales
+    const orderItems = await OrderRequestItem.findAll({
+      where: { order_request_id: order._id },
+    });
+    for (const item of orderItems) {
+      // Find and update sale
+      const sale = await Sale.findOne({
+        where: { order_request_id: order._id, product_id: item.product_id },
+      });
+      if (sale) {
+        sale.status = "completed";
+        sale.completed_at = new Date();
+        await sale.save();
+      }
+
+      const product = await Product.findByPk(item.product_id);
+      if (product) {
+        // Deduct actual stock and release reserved stock
+        product.stock = Math.max(0, product.stock - item.quantity);
+        product.reserved_stock = Math.max(
+          0,
+          product.reserved_stock - item.quantity,
+        );
+        await product.save();
+
+        // Create Stock Out Record
+        await Stock.create({
+          product_id: product._id,
+          user_id: req.user._id,
+          type: "out",
+          quantity: item.quantity,
+          balance: product.stock,
+          location: order.location || null,
+          completed_at: new Date(),
+          note: `Deducted for delivery confirmation (#${order._id})`,
+        });
+      }
+    }
+
     await ActivityLog.create({
       user_id: req.user._id,
       action: "confirm_delivery",
