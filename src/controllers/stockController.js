@@ -229,11 +229,63 @@ exports.summary = async (req, res) => {
     }
     const lowStockItems = await Product.count({ where: productWhere });
 
+    // --- Trend Calculation (Last 30 Days vs Previous 30 Days) ---
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    const sixtyDaysAgo = new Date(today);
+    sixtyDaysAgo.setDate(today.getDate() - 60);
+
+    // Helper for filtered sum
+    const getTrendSum = async (type, startDate, endDate) => {
+      const trendWhere = { ...where }; // Inherit filters
+      trendWhere.type = type;
+      trendWhere.completed_at = {
+        [Op.between]: [startDate, endDate],
+      };
+      return (await Stock.sum("quantity", { where: trendWhere })) || 0;
+    };
+
+    // 1. Stock In Trend
+    const currentIn = await getTrendSum("in", thirtyDaysAgo, today);
+    const previousIn = await getTrendSum("in", sixtyDaysAgo, thirtyDaysAgo);
+    const stockInTrend =
+      previousIn === 0
+        ? currentIn > 0
+          ? 100
+          : 0
+        : Math.round(((currentIn - previousIn) / previousIn) * 100);
+
+    // 2. Stock Out Trend
+    const currentOut = await getTrendSum("out", thirtyDaysAgo, today);
+    const previousOut = await getTrendSum("out", sixtyDaysAgo, thirtyDaysAgo);
+    const stockOutTrend =
+      previousOut === 0
+        ? currentOut > 0
+          ? 100
+          : 0
+        : Math.round(((currentOut - previousOut) / previousOut) * 100);
+
+    // 3. Balance Trend
+    const netChangeLast30 = currentIn - currentOut;
+    const balance30DaysAgo = currentBalance - netChangeLast30;
+    const balanceTrend =
+      balance30DaysAgo === 0
+        ? currentBalance > 0
+          ? 100
+          : 0
+        : Math.round(((currentBalance - balance30DaysAgo) / balance30DaysAgo) * 100);
+
     res.json({
       totalStockIn: totalStockIn || 0,
       totalStockOut: totalStockOut || 0,
       currentBalance,
       lowStockItems,
+      trends: {
+        stockIn: stockInTrend,
+        stockOut: stockOutTrend,
+        currentBalance: balanceTrend,
+      },
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

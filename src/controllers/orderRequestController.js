@@ -358,12 +358,16 @@ exports.updateStatus = async (req, res) => {
           <p>Thank you for using our Inventory Management System.</p>
           <p>Best regards,<br/>Inventory Management Team<br/>${companyName}</p>
         `;
-        await sendMail({
-          to: requester.email,
-          subject: "Order Request Approved",
-          text: `Dear ${requester.first_name + " " + requester.last_name},\n\nWe’re happy to inform you that your order request has been approved.\n\nOrder Details:\n${productLines}\nOur inventory team is now processing your order. You will be notified once the items are prepared or dispatched.\n\nIf you have any questions or need further assistance, feel free to contact us.\n\nThank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
-          html,
-        });
+        try {
+          await sendMail({
+            to: requester.email,
+            subject: "Order Request Approved",
+            text: `Dear ${requester.first_name + " " + requester.last_name},\n\nWe’re happy to inform you that your order request has been approved.\n\nOrder Details:\n${productLines}\nOur inventory team is now processing your order. You will be notified once the items are prepared or dispatched.\n\nIf you have any questions or need further assistance, feel free to contact us.\n\nThank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
+            html,
+          });
+        } catch (emailErr) {
+          console.error("Failed to send approval email:", emailErr);
+        }
       }
 
       // Return updated order with items
@@ -486,12 +490,16 @@ exports.updateStatus = async (req, res) => {
           <p>We appreciate your understanding and thank you for using our Inventory Management System.</p>
           <p>Best regards,<br/>Inventory Management Team<br/>${companyName}</p>
         `;
-        await sendMail({
-          to: requester.email,
-          subject: "Order Request Rejected",
-          text: `Dear ${requester.first_name},\n\nThank you for submitting your order request.\n\nAfter review, we regret to inform you that your request has been rejected.\n\nOrder Details:\n${productLines}\nReason for Rejection:\n${order.rejection_reason || "No reason provided."}\n\nYou may submit a new request with updated details or contact the inventory administrator for further clarification.\n\nWe appreciate your understanding and thank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
-          html,
-        });
+        try {
+          await sendMail({
+            to: requester.email,
+            subject: "Order Request Rejected",
+            text: `Dear ${requester.first_name},\n\nThank you for submitting your order request.\n\nAfter review, we regret to inform you that your request has been rejected.\n\nOrder Details:\n${productLines}\nReason for Rejection:\n${order.rejection_reason || "No reason provided."}\n\nYou may submit a new request with updated details or contact the inventory administrator for further clarification.\n\nWe appreciate your understanding and thank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
+            html,
+          });
+        } catch (emailErr) {
+          console.error("Failed to send rejection email:", emailErr);
+        }
       }
       const orderRequest = await OrderRequest.findByPk(order._id, {
         include: [

@@ -60,7 +60,124 @@ exports.getAll = async (req, res) => {
   }
 };
 
-// Get a single sales
+// Get sales summary
+exports.summary = async (req, res) => {
+  try {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    const sixtyDaysAgo = new Date(today);
+    sixtyDaysAgo.setDate(today.getDate() - 60);
+
+    // Helper for filtered stats
+    const getStats = async (startDate, endDate) => {
+      const where = {
+        status: "Completed",
+        completed_at: {
+          [Op.between]: [startDate, endDate],
+        },
+      };
+      
+      // We need to sum the total of each sale. 
+      // Since Sale total is derived from items, this is complex in SQL directly without a generated column.
+      // For now, simpler approach: Fetch all completed sales in range and sum in JS (if volume is low) or use Sequelize literal?
+      // Given the schema, 'items' are in a separate table.
+      // Let's use a simpler approach for now: Count is easy. Revenue needs join.
+      
+      const sales = await Sale.findAll({
+        where,
+        include: [{ 
+          model: require("../models/SaleItem"), 
+          as: "items" 
+        }],
+      });
+
+      let revenue = 0;
+      let count = sales.length;
+
+      sales.forEach(sale => {
+        if (sale.items) {
+          sale.items.forEach(item => {
+            const price = Number(item.price) || 0;
+            const qty = Number(item.quantity) || 0;
+            const discount = Number(item.discount) || 0;
+            revenue += price * qty * (1 - discount / 100);
+          });
+        }
+      });
+
+      return { revenue, count };
+    };
+
+    // Current Period (Last 30 Days)
+    const current = await getStats(thirtyDaysAgo, today);
+    
+    // Previous Period (30-60 Days Ago)
+    const previous = await getStats(sixtyDaysAgo, thirtyDaysAgo);
+
+    // Calculate Trends
+    const calcTrend = (curr, prev) => {
+      if (prev === 0) return curr > 0 ? 100 : 0;
+      return Math.round(((curr - prev) / prev) * 100);
+    };
+
+    const revenueTrend = calcTrend(current.revenue, previous.revenue);
+    const salesTrend = calcTrend(current.count, previous.count);
+    
+    // Avg Transaction Trend
+    const currentAvg = current.count > 0 ? current.revenue / current.count : 0;
+    const previousAvg = previous.count > 0 ? previous.revenue / previous.count : 0;
+    const avgTrend = calcTrend(currentAvg, previousAvg);
+
+    // Total All Time (for the main numbers, usually Dashboard shows All Time? 
+    // Or does it show "This Month"? 
+    // The previous mock values "$571.87" seem specific. 
+    // Usually "Total Revenue" implies All Time or Year To Date. 
+    // Let's stick to **All Time** for the big numbers, and Trends appropriately.
+    // BUT, trends are usually relative to the Big Number's context. 
+    // If Big Number is "Total Revenue (All Time)", accurate trend is meaningless (Today vs Yesterday?). 
+    // Let's assume the cards show **Last 30 Days** stats if we show a 30-day trend?
+    // OR, we show All Time Stats, but the Trend is "Last 30 Days vs Prev 30 Days" as a "Current Momentum" indicator.
+    // Let's go with All Time for totals to match typical "Dashboard" feel, or "This Month"?
+    // The mockup had "Total Revenue", "Total Sales".
+    // I will compute ALL TIME totals for the main display.
+    
+    // All Time Stats
+    const allTime = await getStats(new Date("2000-01-01"), new Date()); // effectively all time
+    
+    // Pending Payments (Status = Processing)
+    const pendingSales = await Sale.findAll({
+      where: { status: "Processing" },
+      include: [{ model: require("../models/SaleItem"), as: "items" }],
+    });
+    let pendingAmount = 0;
+    pendingSales.forEach(sale => {
+      if (sale.items) {
+        sale.items.forEach(item => {
+            const price = Number(item.price) || 0;
+            const qty = Number(item.quantity) || 0;
+            const discount = Number(item.discount) || 0;
+            pendingAmount += price * qty * (1 - discount / 100);
+        });
+      }
+    });
+
+    res.json({
+      totalRevenue: allTime.revenue,
+      totalSales: allTime.count,
+      avgTransaction: allTime.count > 0 ? allTime.revenue / allTime.count : 0,
+      pendingPayments: pendingAmount,
+      trends: {
+        revenue: revenueTrend,
+        sales: salesTrend,
+        avgTransaction: avgTrend
+      }
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
 exports.getOne = async (req, res) => {
   const sale = await Sale.findByPk(req.params.id, {
     include: [
