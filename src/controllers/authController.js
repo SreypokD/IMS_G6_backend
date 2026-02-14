@@ -1,5 +1,7 @@
 const Permission = require("../models/Permission");
 const User = require("../models/User");
+const { Op } = require("sequelize");
+const { sendMail } = require("../utils/mail.util");
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -9,7 +11,29 @@ const refreshTokens = new Set(); // In-memory store for demo; use DB/Redis in pr
 
 exports.register = async (req, res) => {
   try {
-    let { email, password, first_name, last_name, phone, address } = req.body;
+    let {
+      email,
+      password,
+      first_name,
+      last_name,
+      phone,
+      address,
+      username,
+      customer_type,
+      company_name,
+      position,
+      company_registration_no,
+      request_purpose,
+      expected_order_volume,
+      order_frequency,
+      product_categories,
+      id_card_or_business_license,
+      shop_photo,
+      location_photo,
+      agree_terms,
+      note_from_customer,
+    } = req.body;
+
     // Ensure address is always an object if provided as a JSON string
     if (typeof address === "string") {
       try {
@@ -48,11 +72,49 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role: "customer",
       permission_id: customerPermission._id,
+      status: "pending", // Default to pending for approval
+      username,
+      customer_type,
+      company_name,
+      position,
+      company_registration_no,
+      request_purpose,
+      expected_order_volume,
+      order_frequency,
+      product_categories,
+      id_card_or_business_license,
+      shop_photo,
+      location_photo,
+      agree_terms,
+      note_from_customer,
     });
     // Fetch user with permission (role) object
     const userMapped = await User.findByPk(user._id, {
       include: [{ model: Permission, as: "permission" }],
     });
+
+    // Send email to admins
+    try {
+      const admins = await User.findAll({ where: { role: "admin" } });
+      const adminEmails = admins.map((admin) => admin.email);
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      if (adminEmails.length > 0) {
+        await sendMail({
+          to: adminEmails.join(","),
+          subject: "New Partner Registration Request",
+          text: `A new partner request has been received from ${first_name} ${last_name} (${company_name || customer_type}).\n\nUsername: ${username}\nEmail: ${email}\n\nPlease login to the admin panel to review and approve:\n${frontendUrl}/users`,
+          html: `<p>A new partner request has been received from <b>${first_name} ${last_name}</b> (${company_name || customer_type}).</p>
+                 <p>Username: ${username}</p>
+                 <p>Email: ${email}</p>
+                 <p>Please login to the admin panel to review and approve.</p>
+                 <p>
+                   <a href="${frontendUrl}/users" style="display: inline-block; padding: 10px 20px; background-color: #1e3a5f; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Request</a>
+                 </p>`,
+        });
+      }
+    } catch (emailErr) {
+      console.error("Failed to send admin notification email:", emailErr);
+    }
     res.status(201).json({
       success: true,
       data: {
@@ -65,6 +127,7 @@ exports.register = async (req, res) => {
         last_name: userMapped.last_name,
         permission: userMapped.permission,
         profile: userMapped.profile,
+        status: userMapped.status,
       },
     });
   } catch (err) {
@@ -76,8 +139,11 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     // Fetch user with permission (role) object
+    // Allow login with email, phone, or username
     const user = await User.findOne({
-      where: { email },
+      where: {
+        [Op.or]: [{ email }, { phone: email }, { username: email }],
+      },
       include: [{ model: Permission, as: "permission" }],
     });
     if (!user)
@@ -89,6 +155,14 @@ exports.login = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, error: "Invalid credentials" });
+
+    if (user.status === "pending") {
+      return res.status(403).json({
+        success: false,
+        error:
+          "Your account is pending approval. Please wait for admin confirmation.",
+      });
+    }
 
     if (user.status !== "active") {
       return res.status(403).json({

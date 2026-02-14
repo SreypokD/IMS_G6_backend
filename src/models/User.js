@@ -58,9 +58,66 @@ const User = sequelize.define(
       onUpdate: "CASCADE",
     },
     status: {
-      type: DataTypes.ENUM("active", "inactive"),
+      type: DataTypes.ENUM("active", "inactive", "pending"),
       allowNull: false,
       defaultValue: "active",
+    },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
+    customer_type: {
+      type: DataTypes.ENUM("individual", "business"),
+      allowNull: true,
+    },
+    company_name: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    position: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    company_registration_no: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    request_purpose: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    expected_order_volume: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    order_frequency: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    product_categories: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    id_card_or_business_license: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    shop_photo: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    location_photo: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    agree_terms: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    note_from_customer: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {

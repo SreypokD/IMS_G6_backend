@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Permission = require("../models/Permission");
+const { sendMail } = require("../utils/mail.util");
 
 // Get all users
 exports.getAll = async (req, res) => {
@@ -123,6 +124,21 @@ exports.update = async (req, res) => {
       "address",
       "profile",
       "permission_id",
+      "status",
+      "username",
+      "customer_type",
+      "company_name",
+      "position",
+      "company_registration_no",
+      "request_purpose",
+      "expected_order_volume",
+      "order_frequency",
+      "product_categories",
+      "id_card_or_business_license",
+      "shop_photo",
+      "location_photo",
+      "agree_terms",
+      "note_from_customer",
     ];
     const updateData = {};
     for (const key of allowedFields) {
@@ -145,7 +161,30 @@ exports.update = async (req, res) => {
         }
       }
     }
+    const previousStatus = user.status;
     await user.update(updateData);
+
+    // Send email notification if status changed from 'pending' to 'active'
+    if (previousStatus === "pending" && updateData.status === "active") {
+      try {
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        await sendMail({
+          to: user.email,
+          subject: "Your Partner Account Approved",
+          text: `Dear ${user.first_name},\n\nYour partner account request has been approved!\nYou can now login to the system here: ${frontendUrl}/login\n\nThank you for partnering with us.`,
+          html: `<p>Dear <b>${user.first_name}</b>,</p>
+                 <p>Your partner account request has been approved!</p>
+                 <p>You can now login to the system using your credentials.</p>
+                 <p>
+                   <a href="${frontendUrl}/login" style="display: inline-block; padding: 10px 20px; background-color: #1e3a5f; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Login Now</a>
+                 </p>
+                 <p>Thank you for partnering with us.</p>`,
+        });
+      } catch (emailErr) {
+        console.error("Failed to send approval email:", emailErr);
+      }
+    }
+
     // Fetch user with full permission objects
     const userWithPermissions = await User.findByPk(user._id, {
       include: [{ model: Permission, as: "permission" }],
