@@ -89,6 +89,14 @@ exports.login = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, error: "Invalid credentials" });
+
+    if (user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        error: "Your account is inactive. Please contact administrator.",
+      });
+    }
+
     const access_token = jwt.sign(
       {
         _id: user._id,

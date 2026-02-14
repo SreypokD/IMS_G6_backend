@@ -317,7 +317,7 @@ exports.updateStatus = async (req, res) => {
           await Notification.create({
             user_id: staff._id,
             type: "pending_delivery",
-            message: `Order #${order._id} approved and pending delivery confirmation.`,
+            message: `Order approved and pending delivery confirmation.`,
             entity_type: "Order Request",
             entity_id: order._id,
             read: false,

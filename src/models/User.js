@@ -57,6 +57,11 @@ const User = sequelize.define(
       onDelete: "RESTRICT",
       onUpdate: "CASCADE",
     },
+    status: {
+      type: DataTypes.ENUM("active", "inactive"),
+      allowNull: false,
+      defaultValue: "active",
+    },
   },
   {
     timestamps: true,

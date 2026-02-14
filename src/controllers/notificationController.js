@@ -25,7 +25,7 @@ exports.getAll = async (req, res) => {
     const user_id = req.user._id;
     const notifications = await Notification.findAll({
       include: [{ model: User, as: "user" }],
-      where: { user_id },
+      where: { user_id, read: false },
       order: [["createdAt", "DESC"]],
       limit: 100,
     });
