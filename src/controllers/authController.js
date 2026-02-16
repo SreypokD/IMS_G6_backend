@@ -18,7 +18,6 @@ exports.register = async (req, res) => {
       last_name,
       phone,
       address,
-      username,
       customer_type,
       company_name,
       position,
@@ -42,6 +41,16 @@ exports.register = async (req, res) => {
         address = null;
       }
     }
+
+    // Ensure product_categories is parsed if string
+    if (typeof product_categories === "string") {
+      try {
+        product_categories = JSON.parse(product_categories);
+      } catch (e) {
+        product_categories = [];
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     // Always assign 'customer' role and customer permissions
     // Find or create the 'customer' permission
@@ -63,6 +72,7 @@ exports.register = async (req, res) => {
         ],
       });
     }
+
     const user = await User.create({
       first_name,
       last_name,
@@ -73,8 +83,7 @@ exports.register = async (req, res) => {
       role: "customer",
       permission_id: customerPermission._id,
       status: "pending", // Default to pending for approval
-      username,
-      customer_type,
+      customer_type: customer_type || "business",
       company_name,
       position,
       company_registration_no,
@@ -102,10 +111,10 @@ exports.register = async (req, res) => {
         await sendMail({
           to: adminEmails.join(","),
           subject: "New Partner Registration Request",
-          text: `A new partner request has been received from ${first_name} ${last_name} (${company_name || customer_type}).\n\nUsername: ${username}\nEmail: ${email}\n\nPlease login to the admin panel to review and approve:\n${frontendUrl}/users`,
-          html: `<p>A new partner request has been received from <b>${first_name} ${last_name}</b> (${company_name || customer_type}).</p>
-                 <p>Username: ${username}</p>
+          text: `A new partner request has been received from ${first_name} ${last_name} (${company_name || "Business"}).\n\nEmail: ${email}\nPhone: ${phone}\n\nPlease login to the admin panel to review and approve:\n${frontendUrl}/users`,
+          html: `<p>A new partner request has been received from <b>${first_name} ${last_name}</b> (${company_name || "Business"}).</p>
                  <p>Email: ${email}</p>
+                 <p>Phone: ${phone}</p>
                  <p>Please login to the admin panel to review and approve.</p>
                  <p>
                    <a href="${frontendUrl}/users" style="display: inline-block; padding: 10px 20px; background-color: #1e3a5f; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Request</a>

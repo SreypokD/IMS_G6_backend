@@ -32,7 +32,7 @@ exports.getAll = async (req, res) => {
       offset,
       order: [["_id", "DESC"]],
     });
-    const usersMapped = users.map((user) => {
+      const usersMapped = users.map((user) => {
       let address = user.address;
       if (typeof address === "string") {
         try {
@@ -41,7 +41,15 @@ exports.getAll = async (req, res) => {
           address = {};
         }
       }
-      return { ...user.toJSON(), address: address || {} };
+      let product_categories = user.product_categories;
+      if (typeof product_categories === "string") {
+          try {
+              product_categories = JSON.parse(product_categories);
+          } catch {
+              product_categories = [];
+          }
+      }
+      return { ...user.toJSON(), address: address || {}, product_categories: product_categories || [] };
     });
     res.json({
       success: true,
@@ -59,10 +67,32 @@ exports.getOne = async (req, res) => {
     include: [{ model: Permission, as: "permission" }],
   });
   if (!user) return res.status(404).json({ error: "Not found" });
-  res.json({ success: true, data: user });
+  
+  let userData = user.toJSON();
+  
+  // Parse address
+  if (typeof userData.address === "string") {
+    try {
+      userData.address = JSON.parse(userData.address);
+    } catch {
+      userData.address = {};
+    }
+  }
+  
+  // Parse product_categories
+  if (typeof userData.product_categories === "string") {
+      try {
+          userData.product_categories = JSON.parse(userData.product_categories);
+      } catch {
+          userData.product_categories = [];
+      }
+  }
+
+  res.json({ success: true, data: userData });
 };
 
 // Create a user
+// Create a user (Admin)
 exports.create = async (req, res) => {
   const { validationResult } = require("express-validator");
   const errors = validationResult(req);
@@ -71,37 +101,111 @@ exports.create = async (req, res) => {
   }
   try {
     const bcrypt = require("bcryptjs");
-    const data = { ...req.body };
-    // Sanitize address if present and is object
-    if (
-      data.address &&
-      typeof data.address === "object" &&
-      !Array.isArray(data.address)
-    ) {
-      data.address = {
-        street: data.address.street || "",
-        house: data.address.house || "",
-        village: data.address.village || "",
-        commune: data.address.commune || "",
-        district: data.address.district || "",
-        province: data.address.province || "",
-      };
+    
+    // Extract specific fields to prevent pollution
+    const {
+      email,
+      password,
+      first_name,
+      last_name,
+      phone,
+      role,
+      permission_id,
+      status,
+      username,
+      address,
+      profile,
+      customer_type,
+      company_name,
+      position,
+      company_registration_no,
+      request_purpose,
+      expected_order_volume,
+      order_frequency,
+      product_categories,
+      id_card_or_business_license,
+      shop_photo,
+      location_photo,
+      note_from_customer,
+    } = req.body;
+
+    const data = {
+      email,
+      first_name,
+      last_name,
+      phone,
+      role,
+      permission_id,
+      status: status || "active", // Default to active for admin-created users
+      username,
+      profile,
+      customer_type,
+      company_name,
+      position,
+      company_registration_no,
+      request_purpose,
+      expected_order_volume,
+      order_frequency,
+      product_categories,
+      id_card_or_business_license,
+      shop_photo,
+      location_photo,
+      note_from_customer,
+    };
+
+    // Sanitize address
+    if (address) {
+       if (typeof address === "object" && !Array.isArray(address)) {
+          data.address = {
+            street: address.street || "",
+            house: address.house || "",
+            village: address.village || "",
+            commune: address.commune || "",
+            district: address.district || "",
+            province: address.province || "",
+          };
+       } else if (typeof address === "string") {
+         try {
+            data.address = JSON.parse(address);
+         } catch (e) {
+            data.address = {};
+         }
+       }
     }
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
+
+    if (password) {
+      data.password = await bcrypt.hash(password, 10);
+    } else {
+       // Require password for manual creation? Or generate temp?
+       // For now, let's assume UI requires it or we fail database constraint if null
+       return res.status(400).json({ success: false, error: "Password is required" });
     }
+
     // Check if email already exists
-    const existing = await User.findOne({ where: { email: data.email } });
+    const existing = await User.findOne({ where: { email } });
     if (existing) {
       return res
         .status(409)
         .json({ success: false, error: "Email already exists" });
     }
+
+    // If permission_id is provided, verify it exists (optional but good practice)
+    if (permission_id) {
+        const perm = await Permission.findByPk(permission_id);
+        if (!perm) {
+            return res.status(400).json({ success: false, error: "Invalid permission role selected" });
+        }
+        // Force role name to match permission name for consistency
+        data.role = perm.name; 
+    }
+
     const user = await User.create(data);
+    
     // Fetch user with full permission objects
     const userWithPermissions = await User.findByPk(user._id, {
       include: [{ model: Permission, as: "permission" }],
     });
+    
     res.status(201).json({ success: true, data: userWithPermissions });
   } catch (err) {
     res.status(400).json({ error: err.message });
