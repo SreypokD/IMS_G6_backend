@@ -10,6 +10,7 @@ exports.getAll = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 10;
     const search = req.query.search || "";
     const permission_id = req.query.permission_id || "";
+    const status = req.query.status || "";
     const offset = (page - 1) * limit;
     const where = {};
     if (search) {
@@ -24,6 +25,9 @@ exports.getAll = async (req, res) => {
     if (permission_id) {
       where.permission_id = permission_id;
     }
+    if (status) {
+      where.status = status;
+    }
     const totalItems = await User.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
     const users = await User.findAll({
@@ -32,7 +36,7 @@ exports.getAll = async (req, res) => {
       offset,
       order: [["_id", "DESC"]],
     });
-      const usersMapped = users.map((user) => {
+    const usersMapped = users.map((user) => {
       let address = user.address;
       if (typeof address === "string") {
         try {
@@ -43,13 +47,17 @@ exports.getAll = async (req, res) => {
       }
       let product_categories = user.product_categories;
       if (typeof product_categories === "string") {
-          try {
-              product_categories = JSON.parse(product_categories);
-          } catch {
-              product_categories = [];
-          }
+        try {
+          product_categories = JSON.parse(product_categories);
+        } catch {
+          product_categories = [];
+        }
       }
-      return { ...user.toJSON(), address: address || {}, product_categories: product_categories || [] };
+      return {
+        ...user.toJSON(),
+        address: address || {},
+        product_categories: product_categories || [],
+      };
     });
     res.json({
       success: true,
@@ -67,9 +75,9 @@ exports.getOne = async (req, res) => {
     include: [{ model: Permission, as: "permission" }],
   });
   if (!user) return res.status(404).json({ error: "Not found" });
-  
+
   let userData = user.toJSON();
-  
+
   // Parse address
   if (typeof userData.address === "string") {
     try {
@@ -78,14 +86,14 @@ exports.getOne = async (req, res) => {
       userData.address = {};
     }
   }
-  
+
   // Parse product_categories
   if (typeof userData.product_categories === "string") {
-      try {
-          userData.product_categories = JSON.parse(userData.product_categories);
-      } catch {
-          userData.product_categories = [];
-      }
+    try {
+      userData.product_categories = JSON.parse(userData.product_categories);
+    } catch {
+      userData.product_categories = [];
+    }
   }
 
   res.json({ success: true, data: userData });
@@ -101,7 +109,7 @@ exports.create = async (req, res) => {
   }
   try {
     const bcrypt = require("bcryptjs");
-    
+
     // Extract specific fields to prevent pollution
     const {
       email,
@@ -155,30 +163,32 @@ exports.create = async (req, res) => {
 
     // Sanitize address
     if (address) {
-       if (typeof address === "object" && !Array.isArray(address)) {
-          data.address = {
-            street: address.street || "",
-            house: address.house || "",
-            village: address.village || "",
-            commune: address.commune || "",
-            district: address.district || "",
-            province: address.province || "",
-          };
-       } else if (typeof address === "string") {
-         try {
-            data.address = JSON.parse(address);
-         } catch (e) {
-            data.address = {};
-         }
-       }
+      if (typeof address === "object" && !Array.isArray(address)) {
+        data.address = {
+          street: address.street || "",
+          house: address.house || "",
+          village: address.village || "",
+          commune: address.commune || "",
+          district: address.district || "",
+          province: address.province || "",
+        };
+      } else if (typeof address === "string") {
+        try {
+          data.address = JSON.parse(address);
+        } catch (e) {
+          data.address = {};
+        }
+      }
     }
 
     if (password) {
       data.password = await bcrypt.hash(password, 10);
     } else {
-       // Require password for manual creation? Or generate temp?
-       // For now, let's assume UI requires it or we fail database constraint if null
-       return res.status(400).json({ success: false, error: "Password is required" });
+      // Require password for manual creation? Or generate temp?
+      // For now, let's assume UI requires it or we fail database constraint if null
+      return res
+        .status(400)
+        .json({ success: false, error: "Password is required" });
     }
 
     // Check if email already exists
@@ -191,21 +201,23 @@ exports.create = async (req, res) => {
 
     // If permission_id is provided, verify it exists (optional but good practice)
     if (permission_id) {
-        const perm = await Permission.findByPk(permission_id);
-        if (!perm) {
-            return res.status(400).json({ success: false, error: "Invalid permission role selected" });
-        }
-        // Force role name to match permission name for consistency
-        data.role = perm.name; 
+      const perm = await Permission.findByPk(permission_id);
+      if (!perm) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Invalid permission role selected" });
+      }
+      // Force role name to match permission name for consistency
+      data.role = perm.name;
     }
 
     const user = await User.create(data);
-    
+
     // Fetch user with full permission objects
     const userWithPermissions = await User.findByPk(user._id, {
       include: [{ model: Permission, as: "permission" }],
     });
-    
+
     res.status(201).json({ success: true, data: userWithPermissions });
   } catch (err) {
     res.status(400).json({ error: err.message });

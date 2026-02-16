@@ -65,13 +65,72 @@ app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // Start server after DB connection
 const PORT = process.env.PORT || 5001;
-sequelize
-  .sync({ alter: true })
-  .then(() => {
+
+async function startServer() {
+  try {
+    // Attempt to clean up duplicate indexes on categories table before sync
+    try {
+      const [results] = await sequelize.query("SHOW INDEX FROM categories");
+      const nameIndexes = results.filter(
+        (idx) => idx.Column_name === "name" && idx.Key_name !== "PRIMARY",
+      );
+      const uniqueKeys = [...new Set(nameIndexes.map((idx) => idx.Key_name))];
+
+      // If we have too many indexes, drop them all and let sync recreate the correct one
+      if (uniqueKeys.length > 1) {
+        console.log(
+          `Found ${uniqueKeys.length} indexes on categories.name. Cleaning up...`,
+        );
+        for (const key of uniqueKeys) {
+          try {
+            await sequelize.query(`DROP INDEX \`${key}\` ON categories`);
+            console.log(`Dropped index: ${key}`);
+          } catch (e) {
+            console.error(`Failed to drop index ${key}:`, e.message);
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore error if table doesn't exist yet
+      if (e.original && e.original.code !== "ER_NO_SUCH_TABLE") {
+        console.log("Index cleanup skipped for categories:", e.message);
+      }
+    }
+
+    // Attempt to clean up duplicate indexes on products table before sync
+    try {
+      const [results] = await sequelize.query("SHOW INDEX FROM products");
+      const codeIndexes = results.filter(
+        (idx) => idx.Column_name === "code" && idx.Key_name !== "PRIMARY",
+      );
+      const uniqueKeys = [...new Set(codeIndexes.map((idx) => idx.Key_name))];
+
+      if (uniqueKeys.length > 1) {
+        console.log(
+          `Found ${uniqueKeys.length} indexes on products.code. Cleaning up...`,
+        );
+        for (const key of uniqueKeys) {
+          try {
+            await sequelize.query(`DROP INDEX \`${key}\` ON products`);
+            console.log(`Dropped index: ${key}`);
+          } catch (e) {
+            console.error(`Failed to drop index ${key}:`, e.message);
+          }
+        }
+      }
+    } catch (e) {
+      if (e.original && e.original.code !== "ER_NO_SUCH_TABLE") {
+        console.log("Index cleanup skipped for products:", e.message);
+      }
+    }
+
+    await sequelize.sync({ alter: true });
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
-  })
-  .catch((err) => {
+  } catch (err) {
     console.error("Failed to sync database:", err);
-  });
+  }
+}
+
+startServer();
