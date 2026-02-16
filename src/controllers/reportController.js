@@ -13,6 +13,9 @@ const { sequelize } = require("../models");
 exports.trends = async (req, res) => {
   try {
     const { from, to } = req.query;
+    if (req.user && req.user.role === 'customer') {
+       return res.status(403).json({ success: false, error: "Access denied" });
+    }
     let startDate, endDate;
 
     if (from && to) {
@@ -74,6 +77,9 @@ exports.trends = async (req, res) => {
 };
 
 exports.inventorySummary = async (req, res) => {
+  if (req.user && req.user.role === 'customer') {
+       return res.status(403).json({ success: false, error: "Access denied" });
+  }
   const totalSuppliers = await Supplier.count();
   const products = await Product.findAll();
   const totalProducts = products.length;
@@ -85,6 +91,12 @@ exports.inventorySummary = async (req, res) => {
 exports.orderStats = async (req, res) => {
   const { from, to } = req.query;
   const where = {};
+  
+  // Filter by user if not admin/staff
+  if (req.user && req.user.role === 'customer') {
+      where.requester_id = req.user._id;
+  }
+
   if (from && to) {
     const startDate = new Date(from);
     const endDate = new Date(to);
@@ -113,6 +125,11 @@ exports.activityLogs = async (req, res) => {
     const { startDate, endDate } = req.query;
 
     const where = {};
+    // Filter by user if customer
+    if (req.user && req.user.role === 'customer') {
+        where.user_id = req.user._id;
+    }
+
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);

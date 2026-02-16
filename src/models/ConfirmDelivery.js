@@ -24,6 +24,10 @@ const ConfirmDelivery = sequelize.define(
     delivery_date: { type: DataTypes.DATE },
     confirmed_by: { type: DataTypes.STRING(24) },
     confirmed_at: { type: DataTypes.DATE },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   { timestamps: true, tableName: "confirm_deliveries" },
 );

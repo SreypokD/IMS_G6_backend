@@ -9,13 +9,18 @@ const ConfirmDelivery = require("../models/ConfirmDelivery");
 const Stock = require("../models/Stock");
 const OrderRequestItem = require("../models/OrderRequestItem");
 const Permission = require("../models/Permission");
-
+const { validationResult } = require("express-validator");
 const { sendMail } = require("../utils/mail.util");
+const { Op, Sequelize } = require("sequelize");
 
 exports.getAll = async (req, res) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
+    if (limit === -1) {
+      limit = 100000;
+      page = 1;
+    }
     const offset = (page - 1) * limit;
     // Allow status filter from query or route (for approve/confirm delivery)
     let status = req.query.status;
@@ -36,7 +41,7 @@ exports.getAll = async (req, res) => {
       startDate,
       endDate,
     } = req.query;
-    const { Op, Sequelize } = require("sequelize");
+
     const where = {};
     if (status) where.status = status;
     if (supplier_id) where.supplier_id = supplier_id;
@@ -115,7 +120,6 @@ exports.getAll = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  const { validationResult } = require("express-validator");
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
@@ -194,6 +198,7 @@ exports.updateStatus = async (req, res) => {
       admin_remarks,
       customer_remark,
       delivery_date,
+      is_active,
     } = req.body;
     // Only allow valid ENUM values for status
     const allowedStatuses = [
@@ -636,9 +641,10 @@ exports.updateStatus = async (req, res) => {
       return res.json({ success: true, data: o });
     } else {
       // For other statuses, just update
-      order.status = status;
+      if (status) order.status = status;
       if (customer_remark) order.customer_remark = customer_remark;
       if (delivery_date) order.delivery_date = delivery_date;
+      if (is_active !== undefined) order.is_active = is_active;
       order.updated_by = user_id;
       order.updated_at = new Date();
       await order.save();
@@ -786,18 +792,7 @@ exports.confirmDelivery = async (req, res) => {
       confirmDelivery.confirmed_at = new Date();
       await confirmDelivery.save();
     }
-    const orderRequest = await OrderRequest.findByPk(order._id, {
-      include: [
-        {
-          model: OrderRequestItem,
-          as: "items",
-          include: [{ model: Product, as: "product" }],
-        },
-        { model: User, as: "requester" },
-        { model: ApproveRequest, as: "approve_request" },
-        { model: ConfirmDelivery, as: "confirm_delivery" },
-      ],
-    });
+
     // Send email to requester
     const requester = await User.findByPk(order.requester_id);
     if (requester && requester.email) {
@@ -844,6 +839,25 @@ exports.confirmDelivery = async (req, res) => {
   }
 };
 
+// Generic update for ConfirmDelivery (e.g. is_active, status override)
+exports.updateConfirmDelivery = async (req, res) => {
+  try {
+    const confirmDelivery = await ConfirmDelivery.findByPk(req.params.id);
+    if (!confirmDelivery) return res.status(404).json({ error: "Not found" });
+
+    const { is_active, status } = req.body;
+
+    // Only update fields that are provided
+    if (is_active !== undefined) confirmDelivery.is_active = is_active;
+    if (status !== undefined) confirmDelivery.status = status;
+
+    await confirmDelivery.save();
+    return res.json({ success: true, data: confirmDelivery });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 // Update order request details (notes, delivery_date, items, etc.)
 exports.update = async (req, res) => {
   try {
@@ -857,9 +871,10 @@ exports.update = async (req, res) => {
         .status(400)
         .json({ error: "Only pending order requests can be updated" });
     }
-    const { notes, delivery_date, orderItems } = req.body;
+    const { notes, delivery_date, orderItems, is_active } = req.body;
     if (notes !== undefined) order.notes = notes;
     if (delivery_date !== undefined) order.delivery_date = delivery_date;
+    if (is_active !== undefined) order.is_active = is_active;
     await order.save();
     // Patch items if provided
     if (Array.isArray(orderItems)) {
@@ -930,7 +945,6 @@ exports.update = async (req, res) => {
 // Get count of order requests needing approval (pending or rejected)
 exports.getPendingOrderRequestCount = async (req, res) => {
   try {
-    const { Op } = require("sequelize");
     // Only admin/staff see all, others see only their own
     const where = {
       status: { [Op.in]: ["pending"] },
@@ -942,5 +956,48 @@ exports.getPendingOrderRequestCount = async (req, res) => {
     res.json({ success: true, count });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// Remove confirm delivery record
+exports.removeConfirmDelivery = async (req, res) => {
+  try {
+    const confirmDelivery = await ConfirmDelivery.findByPk(req.params.id);
+    if (!confirmDelivery) return res.status(404).json({ error: "Not found" });
+    await confirmDelivery.destroy();
+    return res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+exports.delete = async (req, res) => {
+  try {
+    const order = await OrderRequest.findByPk(req.params.id);
+    if (!order)
+      return res.status(404).json({ error: "Order request not found" });
+
+    // Delete associated items
+    await OrderRequestItem.destroy({ where: { order_request_id: order._id } });
+
+    // Delete associated approve request
+    await ApproveRequest.destroy({ where: { order_request_id: order._id } });
+
+    // Delete associated confirm delivery
+    await ConfirmDelivery.destroy({ where: { order_request_id: order._id } });
+
+    // Delete associated sales (if any, though usually completed orders shouldn't be deleted easily)
+    await Sale.destroy({ where: { order_request_id: order._id } });
+
+    // Logs and notifications can be kept or deleted. For now, let's keep logs for audit trail but maybe delete notifications?
+    // Usually we keep logs. Notifications can be deleted to clean up.
+    await Notification.destroy({
+      where: { entity_id: order._id, entity_type: "Order Request" },
+    });
+
+    await order.destroy();
+    res.json({ success: true, message: "Order request deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

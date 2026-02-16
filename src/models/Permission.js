@@ -33,6 +33,11 @@ const Permission = sequelize.define(
         },
       },
     },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "active",
+    },
   },
   {
     timestamps: true,

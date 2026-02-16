@@ -1,5 +1,6 @@
 const Permission = require("../models/Permission");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const { Op } = require("sequelize");
 const { sendMail } = require("../utils/mail.util");
 
@@ -97,32 +98,67 @@ exports.register = async (req, res) => {
       agree_terms,
       note_from_customer,
     });
+
     // Fetch user with permission (role) object
     const userMapped = await User.findByPk(user._id, {
       include: [{ model: Permission, as: "permission" }],
     });
 
-    // Send email to admins
+    // Send email to users with user management permissions
     try {
-      const admins = await User.findAll({ where: { role: "admin" } });
-      const adminEmails = admins.map((admin) => admin.email);
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-      if (adminEmails.length > 0) {
-        await sendMail({
-          to: adminEmails.join(","),
-          subject: "New Partner Registration Request",
-          text: `A new partner request has been received from ${first_name} ${last_name} (${company_name || "Business"}).\n\nEmail: ${email}\nPhone: ${phone}\n\nPlease login to the admin panel to review and approve:\n${frontendUrl}/users`,
-          html: `<p>A new partner request has been received from <b>${first_name} ${last_name}</b> (${company_name || "Business"}).</p>
+      // Find all permissions that include 'view_user' or 'update_user'
+      const permissions = await Permission.findAll();
+      const targetPermissionIds = permissions
+        .filter(
+          (p) =>
+            p.permissions &&
+            (p.permissions.includes("view_user") ||
+              p.permissions.includes("update_user")),
+        )
+        .map((p) => p._id);
+
+      if (targetPermissionIds.length > 0) {
+        const recipients = await User.findAll({
+          where: {
+            permission_id: { [Op.in]: targetPermissionIds },
+            status: "active",
+          },
+        });
+
+        const recipientEmails = recipients.map((u) => u.email);
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+        if (recipientEmails.length > 0) {
+          // Create in-app notifications
+          await Promise.all(
+            recipients.map((recipient) =>
+              Notification.create({
+                user_id: recipient._id,
+                type: "register_request",
+                message: `New partner request from ${first_name} ${last_name}`,
+                entity_type: "user",
+                entity_id: user._id,
+                read: false,
+              }),
+            ),
+          );
+
+          await sendMail({
+            to: recipientEmails.join(","),
+            subject: "New Partner Registration Request",
+            text: `A new partner request has been received from ${first_name} ${last_name} (${company_name || "Business"}).\n\nEmail: ${email}\nPhone: ${phone}\n\nPlease login to the admin panel to review and approve:\n${frontendUrl}/users`,
+            html: `<p>A new partner request has been received from <b>${first_name} ${last_name}</b> (${company_name || "Business"}).</p>
                  <p>Email: ${email}</p>
                  <p>Phone: ${phone}</p>
                  <p>Please login to the admin panel to review and approve.</p>
                  <p>
                    <a href="${frontendUrl}/users" style="display: inline-block; padding: 10px 20px; background-color: #1e3a5f; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Review Request</a>
                  </p>`,
-        });
+          });
+        }
       }
     } catch (emailErr) {
-      console.error("Failed to send admin notification email:", emailErr);
+      console.error("Failed to send notification email:", emailErr);
     }
     res.status(201).json({
       success: true,

@@ -24,6 +24,10 @@ const Sale = sequelize.define(
     notes: { type: DataTypes.TEXT },
     status: { type: DataTypes.STRING, defaultValue: "Completed" },
     completed_at: { type: DataTypes.DATE },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   { timestamps: true, tableName: "sales" },
 );

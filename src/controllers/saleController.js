@@ -1,5 +1,6 @@
 const { sequelize } = require("../models");
 const Sale = require("../models/Sale");
+const SaleItem = require("../models/SaleItem");
 const Product = require("../models/Product");
 const Stock = require("../models/Stock");
 const User = require("../models/User");
@@ -8,8 +9,12 @@ const { Op } = require("sequelize");
 // Get all sales
 exports.getAll = async (req, res) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
+    if (limit === -1) {
+      limit = 100000;
+      page = 1;
+    }
     const offset = (page - 1) * limit;
     const { startDate, endDate, customer, status, search } = req.query;
     const where = {};
@@ -40,7 +45,7 @@ exports.getAll = async (req, res) => {
       where,
       include: [
         {
-          model: require("../models/SaleItem"),
+          model: SaleItem,
           as: "items",
           include: [{ model: Product, as: "product" }],
         },
@@ -77,27 +82,23 @@ exports.summary = async (req, res) => {
           [Op.between]: [startDate, endDate],
         },
       };
-      
-      // We need to sum the total of each sale. 
-      // Since Sale total is derived from items, this is complex in SQL directly without a generated column.
-      // For now, simpler approach: Fetch all completed sales in range and sum in JS (if volume is low) or use Sequelize literal?
-      // Given the schema, 'items' are in a separate table.
-      // Let's use a simpler approach for now: Count is easy. Revenue needs join.
-      
+
       const sales = await Sale.findAll({
         where,
-        include: [{ 
-          model: require("../models/SaleItem"), 
-          as: "items" 
-        }],
+        include: [
+          {
+            model: SaleItem,
+            as: "items",
+          },
+        ],
       });
 
       let revenue = 0;
       let count = sales.length;
 
-      sales.forEach(sale => {
+      sales.forEach((sale) => {
         if (sale.items) {
-          sale.items.forEach(item => {
+          sale.items.forEach((item) => {
             const price = Number(item.price) || 0;
             const qty = Number(item.quantity) || 0;
             const discount = Number(item.discount) || 0;
@@ -111,7 +112,7 @@ exports.summary = async (req, res) => {
 
     // Current Period (Last 30 Days)
     const current = await getStats(thirtyDaysAgo, today);
-    
+
     // Previous Period (30-60 Days Ago)
     const previous = await getStats(sixtyDaysAgo, thirtyDaysAgo);
 
@@ -123,41 +124,29 @@ exports.summary = async (req, res) => {
 
     const revenueTrend = calcTrend(current.revenue, previous.revenue);
     const salesTrend = calcTrend(current.count, previous.count);
-    
+
     // Avg Transaction Trend
     const currentAvg = current.count > 0 ? current.revenue / current.count : 0;
-    const previousAvg = previous.count > 0 ? previous.revenue / previous.count : 0;
+    const previousAvg =
+      previous.count > 0 ? previous.revenue / previous.count : 0;
     const avgTrend = calcTrend(currentAvg, previousAvg);
 
-    // Total All Time (for the main numbers, usually Dashboard shows All Time? 
-    // Or does it show "This Month"? 
-    // The previous mock values "$571.87" seem specific. 
-    // Usually "Total Revenue" implies All Time or Year To Date. 
-    // Let's stick to **All Time** for the big numbers, and Trends appropriately.
-    // BUT, trends are usually relative to the Big Number's context. 
-    // If Big Number is "Total Revenue (All Time)", accurate trend is meaningless (Today vs Yesterday?). 
-    // Let's assume the cards show **Last 30 Days** stats if we show a 30-day trend?
-    // OR, we show All Time Stats, but the Trend is "Last 30 Days vs Prev 30 Days" as a "Current Momentum" indicator.
-    // Let's go with All Time for totals to match typical "Dashboard" feel, or "This Month"?
-    // The mockup had "Total Revenue", "Total Sales".
-    // I will compute ALL TIME totals for the main display.
-    
     // All Time Stats
     const allTime = await getStats(new Date("2000-01-01"), new Date()); // effectively all time
-    
+
     // Pending Payments (Status = Processing)
     const pendingSales = await Sale.findAll({
       where: { status: "Processing" },
-      include: [{ model: require("../models/SaleItem"), as: "items" }],
+      include: [{ model: SaleItem, as: "items" }],
     });
     let pendingAmount = 0;
-    pendingSales.forEach(sale => {
+    pendingSales.forEach((sale) => {
       if (sale.items) {
-        sale.items.forEach(item => {
-            const price = Number(item.price) || 0;
-            const qty = Number(item.quantity) || 0;
-            const discount = Number(item.discount) || 0;
-            pendingAmount += price * qty * (1 - discount / 100);
+        sale.items.forEach((item) => {
+          const price = Number(item.price) || 0;
+          const qty = Number(item.quantity) || 0;
+          const discount = Number(item.discount) || 0;
+          pendingAmount += price * qty * (1 - discount / 100);
         });
       }
     });
@@ -170,10 +159,9 @@ exports.summary = async (req, res) => {
       trends: {
         revenue: revenueTrend,
         sales: salesTrend,
-        avgTransaction: avgTrend
-      }
+        avgTransaction: avgTrend,
+      },
     });
-
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -182,7 +170,7 @@ exports.getOne = async (req, res) => {
   const sale = await Sale.findByPk(req.params.id, {
     include: [
       {
-        model: require("../models/SaleItem"),
+        model: SaleItem,
         as: "items",
         include: [{ model: Product, as: "product" }],
       },
@@ -240,7 +228,7 @@ exports.create = async (req, res) => {
       await product.update({ stock: newStock }, { transaction: t });
 
       // 3. Create SaleItem
-      await require("../models/SaleItem").create(
+      await SaleItem.create(
         {
           sale_id: sale._id,
           product_id: productId,
@@ -281,7 +269,7 @@ exports.update = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const sale = await Sale.findByPk(req.params.id, {
-      include: [{ model: require("../models/SaleItem"), as: "items" }],
+      include: [{ model: SaleItem, as: "items" }],
       transaction: t,
     });
 
@@ -290,7 +278,8 @@ exports.update = async (req, res) => {
       return res.status(404).json({ success: false, error: "Not found" });
     }
 
-    const { items, customer_id, payment_method, notes, status } = req.body;
+    const { items, customer_id, payment_method, notes, status, is_active } =
+      req.body;
 
     // 1. Revert Stock for existing items
     if (sale.items && sale.items.length > 0) {
@@ -345,7 +334,7 @@ exports.update = async (req, res) => {
         const newStock = product.stock - quantity;
         await product.update({ stock: newStock }, { transaction: t });
 
-        await require("../models/SaleItem").create(
+        await SaleItem.create(
           {
             sale_id: sale._id,
             product_id: productId,
@@ -381,6 +370,7 @@ exports.update = async (req, res) => {
         payment_method: payment_method || sale.payment_method,
         notes: notes !== undefined ? notes : sale.notes,
         status: status || sale.status,
+        is_active: is_active !== undefined ? is_active : sale.is_active,
       },
       { transaction: t },
     );
@@ -391,7 +381,7 @@ exports.update = async (req, res) => {
     const updatedSale = await Sale.findByPk(req.params.id, {
       include: [
         {
-          model: require("../models/SaleItem"),
+          model: SaleItem,
           as: "items",
           include: [{ model: Product, as: "product" }],
         },
@@ -410,7 +400,7 @@ exports.remove = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const sale = await Sale.findByPk(req.params.id, {
-      include: [{ model: require("../models/SaleItem"), as: "items" }],
+      include: [{ model: SaleItem, as: "items" }],
       transaction: t,
     });
 

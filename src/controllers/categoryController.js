@@ -1,15 +1,24 @@
 const Category = require("../models/Category");
+const { Op } = require("sequelize");
+const { validationResult } = require("express-validator");
 
 exports.getAll = async (req, res) => {
   try {
-    const { Op } = require("sequelize");
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
     const search = req.query.search || "";
+    const status = req.query.status || "";
+    if (limit === -1) {
+      limit = 100000;
+      page = 1;
+    }
     const offset = (page - 1) * limit;
     const where = {};
     if (search) {
       where.name = { [Op.like]: `%${search}%` };
+    }
+    if (status) {
+      where.status = status;
     }
     const totalItems = await Category.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
@@ -30,7 +39,6 @@ exports.getAll = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  const { validationResult } = require("express-validator");
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });

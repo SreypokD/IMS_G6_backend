@@ -22,46 +22,146 @@ async function seed() {
 
   // Seed categories
   const categories = await Category.bulkCreate([
-    { name: "Electronics", description: "Electronic devices and gadgets" },
-    { name: "Stationery", description: "Office and school supplies" },
-    { name: "Furniture", description: "Home and office furniture" },
-    { name: "Food & Beverage", description: "Groceries and drinks" },
-    { name: "Clothing", description: "Apparel and accessories" },
-    { name: "Health & Beauty", description: "Personal care products" },
+    {
+      name: "Electronics",
+      description: "Electronic devices and gadgets",
+      status: "active",
+    },
+    {
+      name: "Stationery",
+      description: "Office and school supplies",
+      status: "active",
+    },
+    {
+      name: "Furniture",
+      description: "Home and office furniture",
+      status: "active",
+    },
+    {
+      name: "Food & Beverage",
+      description: "Groceries and drinks",
+      status: "active",
+    },
+    {
+      name: "Clothing",
+      description: "Apparel and accessories",
+      status: "active",
+    },
+    {
+      name: "Health & Beauty",
+      description: "Personal care products",
+      status: "active",
+    },
     {
       name: "Sports & Outdoors",
       description: "Sporting goods and outdoor gear",
+      status: "active",
     },
-    { name: "Automotive", description: "Car parts and accessories" },
-    { name: "Toys & Games", description: "Children's toys and games" },
-    { name: "Books & Media", description: "Books, music, and movies" },
-    { name: "Office Supplies", description: "Supplies for office use" },
+    {
+      name: "Automotive",
+      description: "Car parts and accessories",
+      status: "active",
+    },
+    {
+      name: "Toys & Games",
+      description: "Children's toys and games",
+      status: "active",
+    },
+    {
+      name: "Books & Media",
+      description: "Books, music, and movies",
+      status: "active",
+    },
+    {
+      name: "Office Supplies",
+      description: "Supplies for office use",
+      status: "active",
+    },
     {
       name: "Cleaning Supplies",
       description: "Products for cleaning and maintenance",
+      status: "active",
     },
-    { name: "Pet Supplies", description: "Products for pets" },
+    {
+      name: "Pet Supplies",
+      description: "Products for pets",
+      status: "active",
+    },
     {
       name: "Garden & Outdoor",
       description: "Gardening tools and outdoor equipment",
+      status: "active",
     },
-    { name: "Baby Products", description: "Products for babies and toddlers" },
-    { name: "Hardware", description: "Tools and hardware supplies" },
-    { name: "Software", description: "Computer software and licenses" },
-    { name: "Music Instruments", description: "Instruments and accessories" },
-    { name: "Art Supplies", description: "Materials for artists" },
-    { name: "Travel & Luggage", description: "Travel bags and accessories" },
-    { name: "Jewelry", description: "Fashion jewelry and accessories" },
-    { name: "Watches", description: "Wristwatches and accessories" },
-    { name: "Footwear", description: "Shoes and footwear" },
-    { name: "Accessories", description: "Fashion accessories" },
-    { name: "Gadgets", description: "Unique gadgets and tech" },
-    { name: "Collectibles", description: "Collectible items and memorabilia" },
-    { name: "Musical Instruments", description: "Instruments and music gear" },
-    { name: "Industrial Supplies", description: "Supplies for industrial use" },
+    {
+      name: "Baby Products",
+      description: "Products for babies and toddlers",
+      status: "active",
+    },
+    {
+      name: "Hardware",
+      description: "Tools and hardware supplies",
+      status: "active",
+    },
+    {
+      name: "Software",
+      description: "Computer software and licenses",
+      status: "active",
+    },
+    {
+      name: "Music Instruments",
+      description: "Instruments and accessories",
+      status: "active",
+    },
+    {
+      name: "Art Supplies",
+      description: "Materials for artists",
+      status: "active",
+    },
+    {
+      name: "Travel & Luggage",
+      description: "Travel bags and accessories",
+      status: "active",
+    },
+    {
+      name: "Jewelry",
+      description: "Fashion jewelry and accessories",
+      status: "active",
+    },
+    {
+      name: "Watches",
+      description: "Wristwatches and accessories",
+      status: "active",
+    },
+    { name: "Footwear", description: "Shoes and footwear", status: "active" },
+    {
+      name: "Accessories",
+      description: "Fashion accessories",
+      status: "active",
+    },
+    {
+      name: "Gadgets",
+      description: "Unique gadgets and tech",
+      status: "active",
+    },
+    {
+      name: "Collectibles",
+      description: "Collectible items and memorabilia",
+      status: "active",
+    },
+    {
+      name: "Musical Instruments",
+      description: "Instruments and music gear",
+      status: "active",
+    },
+    {
+      name: "Industrial Supplies",
+      description: "Supplies for industrial use",
+      status: "active",
+    },
     {
       name: "Medical Supplies",
       description: "Healthcare products and equipment",
+      status: "active",
     },
   ]);
 

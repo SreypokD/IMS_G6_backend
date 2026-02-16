@@ -1,11 +1,15 @@
 const Permission = require("../models/Permission");
+const { Op } = require("sequelize");
 
 // Get all permissions
 exports.getAll = async (req, res) => {
   try {
-    const { Op } = require("sequelize");
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
+    if (limit === -1) {
+      limit = 100000;
+      page = 1;
+    }
     const search = req.query.search || "";
     const offset = (page - 1) * limit;
     const where = {};

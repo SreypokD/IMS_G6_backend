@@ -6,8 +6,12 @@ const { Op } = require("sequelize");
 // Get all stock movements (with filters, pagination)
 exports.getAll = async (req, res) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
+    if (limit === -1) {
+      limit = 100000;
+      page = 1;
+    }
     const offset = (page - 1) * limit;
     const where = {};
     if (req.query.type && req.query.type !== "All Transactions") {
@@ -297,7 +301,7 @@ exports.update = async (req, res) => {
   const t = await Stock.sequelize.transaction();
   try {
     const { id } = req.params;
-    const { product_id, quantity, type, batch_number, reason, location, note } =
+    const { product_id, quantity, type, batch_number, reason, location, note, status } =
       req.body;
 
     const stock = await Stock.findByPk(id, { transaction: t });
@@ -381,7 +385,9 @@ exports.update = async (req, res) => {
     stock.batch_number = batch_number || stock.batch_number;
     stock.reason = reason || stock.reason;
     stock.location = location || stock.location;
+    stock.location = location || stock.location;
     stock.note = note || stock.note;
+    if (status) stock.status = status;
     // stock.balance updated above
 
     await stock.save({ transaction: t });

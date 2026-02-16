@@ -124,6 +124,36 @@ async function startServer() {
       }
     }
 
+    // Attempt to clean up duplicate indexes on users table before sync
+    try {
+      const [results] = await sequelize.query("SHOW INDEX FROM users");
+      // Filter for email and username indexes
+      const userIndexes = results.filter(
+        (idx) =>
+          (idx.Column_name === "email" || idx.Column_name === "username") &&
+          idx.Key_name !== "PRIMARY",
+      );
+      const uniqueKeys = [...new Set(userIndexes.map((idx) => idx.Key_name))];
+
+      if (uniqueKeys.length > 0) {
+        console.log(
+          `Found ${uniqueKeys.length} indexes on users (email/username). Cleaning up...`,
+        );
+        for (const key of uniqueKeys) {
+          try {
+            await sequelize.query(`DROP INDEX \`${key}\` ON users`);
+            console.log(`Dropped index: ${key}`);
+          } catch (e) {
+            console.error(`Failed to drop index ${key}:`, e.message);
+          }
+        }
+      }
+    } catch (e) {
+      if (e.original && e.original.code !== "ER_NO_SUCH_TABLE") {
+        console.log("Index cleanup skipped for users:", e.message);
+      }
+    }
+
     await sequelize.sync({ alter: true });
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

@@ -70,6 +70,11 @@ const Stock = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "active",
+    },
   },
   { timestamps: true, tableName: "stocks" },
 );

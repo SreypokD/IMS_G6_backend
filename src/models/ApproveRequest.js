@@ -25,6 +25,10 @@ const ApproveRequest = sequelize.define(
     rejection_reason: { type: DataTypes.STRING },
     approved_by: { type: DataTypes.STRING(24) },
     approved_date: { type: DataTypes.DATE },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   { timestamps: true, tableName: "approve_requests" },
 );

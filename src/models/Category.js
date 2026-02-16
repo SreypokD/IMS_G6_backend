@@ -12,6 +12,11 @@ const Category = sequelize.define(
     },
     name: { type: DataTypes.STRING, allowNull: false, unique: true },
     description: { type: DataTypes.STRING, allowNull: true },
+    status: {
+      type: DataTypes.ENUM("active", "inactive"),
+      allowNull: false,
+      defaultValue: "active",
+    },
   },
   { timestamps: true, tableName: "categories" },
 );

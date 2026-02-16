@@ -44,6 +44,11 @@ const Product = sequelize.define(
       onDelete: "RESTRICT",
       onUpdate: "CASCADE",
     },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "active",
+    },
   },
   { timestamps: true, tableName: "products" },
 );

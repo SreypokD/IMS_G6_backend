@@ -5,12 +5,15 @@ const { Op } = require("sequelize");
 // Get all expenses
 exports.getAll = async (req, res) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
+    if (limit === -1) {
+      limit = 100000;
+      page = 1;
+    }
     const offset = (page - 1) * limit;
     const { startDate, endDate, category, search } = req.query;
     const where = {};
-
     if (category && category !== "All Categories") where.category = category;
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -20,14 +23,11 @@ exports.getAll = async (req, res) => {
         [Op.between]: [start, end],
       };
     }
-
     if (search) {
       where.description = { [Op.like]: `%${search}%` };
     }
-
     const totalItems = await Expense.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
-
     const expenses = await Expense.findAll({
       where,
       include: [

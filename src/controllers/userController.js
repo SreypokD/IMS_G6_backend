@@ -1,3 +1,6 @@
+const bcrypt = require("bcryptjs");
+const { validationResult } = require("express-validator");
+const { Op } = require("sequelize");
 const User = require("../models/User");
 const Permission = require("../models/Permission");
 const { sendMail } = require("../utils/mail.util");
@@ -5,9 +8,12 @@ const { sendMail } = require("../utils/mail.util");
 // Get all users
 exports.getAll = async (req, res) => {
   try {
-    const { Op } = require("sequelize");
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
+    if (limit === -1) {
+      limit = 100000;
+      page = 1;
+    }
     const search = req.query.search || "";
     const permission_id = req.query.permission_id || "";
     const status = req.query.status || "";
@@ -102,14 +108,11 @@ exports.getOne = async (req, res) => {
 // Create a user
 // Create a user (Admin)
 exports.create = async (req, res) => {
-  const { validationResult } = require("express-validator");
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({ success: false, errors: errors.array() });
   }
   try {
-    const bcrypt = require("bcryptjs");
-
     // Extract specific fields to prevent pollution
     const {
       email,
@@ -335,7 +338,6 @@ exports.resetPassword = async (req, res) => {
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    const bcrypt = require("bcryptjs");
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await user.update({ password: hashedPassword });
@@ -366,7 +368,6 @@ exports.updateProfile = async (req, res) => {
       if (req.body[key] !== undefined) {
         if (key === "password") {
           if (req.body.password && req.body.password.length >= 6) {
-            const bcrypt = require("bcryptjs");
             updateData.password = await bcrypt.hash(req.body.password, 10);
           }
         } else if (

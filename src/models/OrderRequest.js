@@ -52,6 +52,10 @@ const OrderRequest = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   {
     timestamps: true,
