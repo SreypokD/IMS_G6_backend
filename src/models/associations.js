@@ -181,4 +181,6 @@ module.exports = {
   ConfirmDelivery,
   Stock,
   Expense,
+  Permission,
+  SaleItem,
 };

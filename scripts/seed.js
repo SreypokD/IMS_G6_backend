@@ -12,6 +12,11 @@ const {
   OrderRequestItem,
   Notification,
   ActivityLog,
+  ApproveRequest,
+  ConfirmDelivery,
+  Sale,
+  SaleItem,
+  Expense,
 } = require("../src/models/associations");
 
 async function seed() {
@@ -443,10 +448,24 @@ async function seed() {
       "view_dashboard",
       // Master Data (read-only)
       "view_category",
+      "create_category",
+      "update_category",
+      "delete_category",
+      // Products
       "view_product",
+      "create_product",
+      "update_product",
+      "delete_product",
+      // Suppliers
       "view_supplier",
+      "create_supplier",
+      "update_supplier",
+      "delete_supplier",
       // Stock (read-only)
       "view_stock",
+      "create_stock",
+      "update_stock",
+      "delete_stock",
       // Purchasing
       "view_order_request",
       "create_order_request",
@@ -458,6 +477,11 @@ async function seed() {
       "create_sale",
       "update_sale",
       "delete_sale",
+      // Expenses
+      "view_expense",
+      "create_expense",
+      "update_expense",
+      "delete_expense",
       // Order History
       "view_order_history",
       // Reports & Logs
@@ -489,6 +513,7 @@ async function seed() {
   // Now seed users
   const password = await bcrypt.hash("admin123", 10);
   const adminUser = await User.create({
+    _id: "5f8d04f3b54764421b7156c0",
     email: "admin@example.com",
     password,
     role: "admin",
@@ -508,6 +533,7 @@ async function seed() {
   });
 
   const staffUser = await User.create({
+    _id: "5f8d04f3b54764421b7156c1",
     email: "staff@example.com",
     password,
     role: "staff",
@@ -528,6 +554,7 @@ async function seed() {
 
   const customerPassword = await bcrypt.hash("customer123", 10);
   const customerUser = await User.create({
+    _id: "5f8d04f3b54764421b7156c2",
     email: "customer@example.com",
     password: customerPassword,
     role: "customer",
@@ -850,134 +877,264 @@ async function seed() {
     }
   }
 
-  const orderRequests = await Promise.all([
-    // Pending order by customer
-    OrderRequest.create({
+  // Seed Order Requests with various statuses
+  const orderRequests = [];
+
+  // 1. Pending Order (Customer)
+  orderRequests.push(
+    await OrderRequest.create({
       quantity: 2,
       status: "pending",
       requested_date: new Date(),
       notes: "Need urgently",
       customer_remark: "Please deliver ASAP",
       delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      updated_by: customerUser._id,
-      admin_remarks: "Please deliver ASAP",
-      rejection_reason: null,
-      notified: false,
-      approved_by: null,
-      approved_date: null,
-      admin_remark: "Please deliver ASAP",
       requester_id: customerUser._id,
-      product_id: products[0]._id,
-      supplier_id: products[0].supplier_id,
+      supplier_id: suppliers[0]._id, // Acme Corp
     }),
-    // Approved order by staff
-    OrderRequest.create({
-      quantity: 5,
-      status: "approved",
+  );
+
+  // 2. Pending Order (Staff)
+  orderRequests.push(
+    await OrderRequest.create({
+      quantity: 10,
+      status: "pending",
       requested_date: new Date(),
-      notes: "For new staff",
-      customer_remark: "",
-      delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      updated_by: staffUser._id,
-      admin_remarks: "Approved for purchase",
-      rejection_reason: null,
-      notified: true,
-      approved_by: adminUser._id,
-      approved_date: new Date(),
-      admin_remark: "Please deliver ASAP",
+      notes: "Office supplies restocking",
+      delivery_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       requester_id: staffUser._id,
-      product_id: products[1]._id,
-      supplier_id: products[1].supplier_id,
+      supplier_id: suppliers[2]._id, // Office Essentials
     }),
-    // Rejected order by customer
-    OrderRequest.create({
-      quantity: 1,
-      status: "rejected",
-      requested_date: new Date(),
-      notes: "Need urgently, my cat is hungry",
-      customer_remark: "",
-      delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      updated_by: adminUser._id,
-      admin_remarks: "Please deliver ASAP",
-      rejection_reason: "Out of stock",
-      notified: true,
-      approved_by: null,
-      approved_date: null,
-      admin_remark: "Please deliver ASAP",
-      requester_id: customerUser._id,
-      product_id: products[2]._id,
-      supplier_id: products[2].supplier_id,
-    }),
-  ]);
+  );
 
-  // Seed OrderRequestItems for each order
-  await Promise.all([
-    OrderRequestItem.create({
-      order_request_id: orderRequests[0]._id,
-      product_id: products[0]._id,
-      quantity: 2,
-    }),
-    OrderRequestItem.create({
-      order_request_id: orderRequests[1]._id,
-      product_id: products[1]._id,
-      quantity: 5,
-    }),
-    OrderRequestItem.create({
-      order_request_id: orderRequests[2]._id,
-      product_id: products[2]._id,
-      quantity: 1,
-    }),
-  ]);
+  // 3. Approved Order (Ready for Delivery)
+  const approvedOrder = await OrderRequest.create({
+    quantity: 5,
+    status: "approved",
+    requested_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    notes: "For new project",
+    delivery_date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+    requester_id: staffUser._id,
+    supplier_id: suppliers[4]._id, // Tech Gadgets
+    approved_by: adminUser._id,
+    approved_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    notified: true,
+  });
+  orderRequests.push(approvedOrder);
 
+  // Create associated ApproveRequest
+  await ApproveRequest.create({
+    order_request_id: approvedOrder._id,
+    status: "approved",
+    admin_remarks: "Approved, proceed with delivery.",
+    approved_by: adminUser._id,
+    approved_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  });
+
+  // 4. Rejected Order
+  const rejectedOrder = await OrderRequest.create({
+    quantity: 1,
+    status: "rejected",
+    requested_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    notes: "Personal item",
+    requester_id: staffUser._id,
+    supplier_id: suppliers[6]._id,
+    rejection_reason: "Not a valid business expense",
+    notified: true,
+  });
+  orderRequests.push(rejectedOrder);
+
+  // Create associated ApproveRequest (Rejected)
+  await ApproveRequest.create({
+    order_request_id: rejectedOrder._id,
+    status: "rejected",
+    rejection_reason: "Not a valid business expense",
+    admin_remarks: "Policy violation",
+    approved_by: adminUser._id,
+    approved_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+  });
+
+  // 5. Completed Order (Delivered)
+  const completedOrder = await OrderRequest.create({
+    quantity: 20,
+    status: "completed",
+    requested_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    notes: "Monthly stock",
+    requester_id: adminUser._id,
+    supplier_id: suppliers[1]._id,
+    approved_by: staffUser._id,
+    approved_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+    notified: true,
+  });
+  orderRequests.push(completedOrder);
+
+  // Create ApproveRequest
+  await ApproveRequest.create({
+    order_request_id: completedOrder._id,
+    status: "approved",
+    admin_remarks: "Routine restock",
+    approved_by: staffUser._id,
+    approved_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+  });
+
+  // Create ConfirmDelivery
+  await ConfirmDelivery.create({
+    order_request_id: completedOrder._id,
+    status: "approved",
+    delivery_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    confirmed_by: adminUser._id,
+    confirmed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+  });
+
+  // 6. Another Completed Order
+  const completedOrder2 = await OrderRequest.create({
+    quantity: 50,
+    status: "completed",
+    requested_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+    notes: "Event materials",
+    requester_id: staffUser._id,
+    supplier_id: suppliers[3]._id,
+    approved_by: adminUser._id,
+    approved_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+    notified: true,
+  });
+  orderRequests.push(completedOrder2);
+
+  await ApproveRequest.create({
+    order_request_id: completedOrder2._id,
+    status: "approved",
+    approved_by: adminUser._id,
+    approved_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+  });
+
+  await ConfirmDelivery.create({
+    order_request_id: completedOrder2._id,
+    status: "approved",
+    delivery_date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+    confirmed_by: staffUser._id,
+    confirmed_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+  });
+
+  // Seed OrderRequestItems
+  for (const order of orderRequests) {
+    // Add 1-3 random items per order
+    const numItems = Math.floor(Math.random() * 3) + 1;
+    for (let i = 0; i < numItems; i++) {
+      const product = products[Math.floor(Math.random() * products.length)];
+      try {
+        await OrderRequestItem.create({
+          order_request_id: order._id,
+          product_id: product._id,
+          quantity: Math.floor(Math.random() * 10) + 1,
+          unit_price: product.price,
+          subtotal: product.price * (Math.floor(Math.random() * 10) + 1),
+        });
+      } catch (e) {
+        // Ignore duplicate key errors if we pick the same product
+      }
+    }
+  }
+
+  // Seed Sales
+  const sales = [];
+  for (let i = 0; i < 50; i++) {
+    const saleDate = new Date(
+      Date.now() - Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000,
+    );
+    const sale = await Sale.create({
+      customer_id: Math.random() > 0.5 ? customerUser._id : null, // Some walk-in, some registered
+      payment_method: ["Cash", "Credit Card", "Bank Transfer"][
+        Math.floor(Math.random() * 3)
+      ],
+      status: "completed",
+      completed_at: saleDate,
+      createdAt: saleDate,
+      updatedAt: saleDate,
+    });
+    sales.push(sale);
+
+    // Add items to sale
+    const numItems = Math.floor(Math.random() * 5) + 1;
+    let totalAmount = 0;
+    for (let j = 0; j < numItems; j++) {
+      const product = products[Math.floor(Math.random() * products.length)];
+      const qty = Math.floor(Math.random() * 5) + 1;
+      await SaleItem.create({
+        sale_id: sale._id,
+        product_id: product._id,
+        quantity: qty,
+        price: product.price,
+        cost_price: product.price * 0.7, // 30% margin
+        discount: 0,
+      });
+      totalAmount += product.price * qty;
+    }
+  }
+
+  // Seed Expenses
+  const expenseCategories = [
+    "Rent",
+    "Utilities",
+    "Salary",
+    "Inventory",
+    "Marketing",
+    "Miscellaneous",
+    "Transport",
+    "Maintenance",
+    "Other",
+  ];
+  for (let i = 0; i < 50; i++) {
+    const date = new Date(
+      Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000,
+    );
+    await Expense.create({
+      description: `Expense for ${expenseCategories[Math.floor(Math.random() * expenseCategories.length)]} - ${Math.floor(Math.random() * 1000)}`,
+      amount: (Math.random() * 1000 + 50).toFixed(2),
+      category:
+        expenseCategories[Math.floor(Math.random() * expenseCategories.length)],
+      date: date,
+      user_id: adminUser._id,
+      status: "active",
+      createdAt: date,
+    });
+  }
+
+  // Notifications
   await Promise.all([
     Notification.create({
       user_id: adminUser._id,
       type: "order_request",
       message: "New order request submitted by customer.",
-      entity_type: "Order Request",
+      entity_type: "OrderRequest",
       entity_id: orderRequests[0]._id,
       read: false,
     }),
     Notification.create({
       user_id: staffUser._id,
-      type: "order_approved",
-      message: "Order request approved by admin.",
-      entity_type: "Order Request",
-      entity_id: orderRequests[1]._id,
-      read: false,
-    }),
-    Notification.create({
-      user_id: customerUser._id,
-      type: "order_rejected",
-      message: "Order request rejected by admin.",
-      entity_type: "Order Request",
-      entity_id: orderRequests[2]._id,
+      type: "approve_request",
+      message: "Order request approved.",
+      entity_type: "OrderRequest",
+      entity_id: approvedOrder._id,
       read: false,
     }),
   ]);
 
-  // Seed ActivityLogs
+  // Activity Logs
   await Promise.all([
     ActivityLog.create({
       user_id: customerUser._id,
       action: "create_order_request",
-      details: "Customer submitted a new order request for Laptop.",
-      entity_type: "Order Request",
+      details: "Customer created order request",
+      entity_type: "OrderRequest",
       entity_id: orderRequests[0]._id,
     }),
     ActivityLog.create({
       user_id: adminUser._id,
       action: "approve_order_request",
-      details: "Admin approved order request for Desk Chair.",
-      entity_type: "Order Request",
-      entity_id: orderRequests[1]._id,
-    }),
-    ActivityLog.create({
-      user_id: adminUser._id,
-      action: "reject_order_request",
-      details: "Admin rejected order request for Notebook.",
-      entity_type: "Order Request",
-      entity_id: orderRequests[2]._id,
+      details: "Admin approved order",
+      entity_type: "OrderRequest",
+      entity_id: approvedOrder._id,
+    
     }),
   ]);
 
