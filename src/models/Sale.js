@@ -20,6 +20,16 @@ const Sale = sequelize.define(
       onDelete: "RESTRICT",
       onUpdate: "CASCADE",
     },
+    order_request_id: {
+      type: DataTypes.STRING(24),
+      allowNull: true,
+      references: {
+        model: "order_requests",
+        key: "_id",
+      },
+      onDelete: "SET NULL",
+      onUpdate: "CASCADE",
+    },
     total_amount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
     discount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
     grand_total: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },

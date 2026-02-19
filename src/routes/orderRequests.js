@@ -12,5 +12,6 @@ router.patch('/:id', authenticateToken, orderRequestController.update);
 router.patch('/:id/status', authenticateToken, orderRequestController.updateStatus);
 router.patch('/:id/cancel', authenticateToken, orderRequestController.cancelOrderRequest);
 router.delete('/:id', authenticateToken, orderRequestController.delete);
+router.post('/:id/confirm', authenticateToken, orderRequestController.confirmDelivery);
 
 module.exports = router;

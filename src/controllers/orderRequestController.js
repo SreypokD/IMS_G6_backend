@@ -245,17 +245,45 @@ exports.updateStatus = async (req, res) => {
         }
       }
 
-      // Reserve stock and create sales records for all items
+      // 1. Calculate totals for the Sale
+      let totalAmount = 0;
+      for (const item of orderItems) {
+        const itemTotal =
+          item.subtotal ||
+          item.quantity * item.unit_price ||
+          (item.quantity * (await Product.findByPk(item.product_id)).price) ||
+          0;
+        totalAmount += parseFloat(itemTotal);
+      }
+
+      // 2. Create ONE Sale record
+      const sale = await Sale.create({
+        order_request_id: order._id,
+        customer_id: order.requester_id,
+        status: "processing",
+        total_amount: totalAmount,
+        grand_total: totalAmount,
+        payment_status: "pending", // Default
+        notes: `Generated from Order Request #${order._id}`,
+      });
+
+      const { SaleItem } = require("../models/associations"); // Ensure SaleItem is imported if not already globally available or needed
+
+      // 3. Reserve stock and create SaleItems
       for (const item of orderItems) {
         const product = await Product.findByPk(item.product_id);
-        product.reserved_stock += item.quantity;
-        await product.save();
-        await Sale.create({
-          order_request_id: order._id,
-          product_id: product._id,
-          quantity: item.quantity,
-          status: "processing",
-        });
+        if (product) {
+          product.reserved_stock += item.quantity;
+          await product.save();
+
+          await SaleItem.create({
+            sale_id: sale._id,
+            product_id: product._id,
+            quantity: item.quantity,
+            price: item.unit_price || product.price,
+            subtotal: item.subtotal || item.quantity * (item.unit_price || product.price),
+          });
+        }
       }
 
       order.status = "approved";
@@ -519,16 +547,24 @@ exports.updateStatus = async (req, res) => {
       return res.json({ success: true, data });
     } else if (status === "completed") {
       // Mark all sales as completed and deduct stock for all items
+      // Find the associated Sale
+      const sale = await Sale.findOne({
+        where: { order_request_id: order._id },
+      });
+      if (sale) {
+        sale.status = "completed";
+        sale.completed_at = new Date();
+        await sale.save();
+      }
+
       const orderItems = await OrderRequestItem.findAll({
         where: { order_request_id: order._id },
       });
+
       for (const item of orderItems) {
-        const sale = await Sale.findOne({
-          where: { order_request_id: order._id, product_id: item.product_id },
-        });
-        if (!sale) continue;
         const product = await Product.findByPk(item.product_id);
         if (!product) continue;
+        
         // Deduct stock and release reserved
         product.stock = Math.max(0, product.stock - item.quantity);
         product.reserved_stock = Math.max(
@@ -536,9 +572,7 @@ exports.updateStatus = async (req, res) => {
           product.reserved_stock - item.quantity,
         );
         await product.save();
-        sale.status = "completed";
-        sale.completed_at = new Date();
-        await sale.save();
+
         await Stock.create({
           product_id: product._id,
           user_id,
@@ -549,6 +583,7 @@ exports.updateStatus = async (req, res) => {
           completed_at: new Date(),
           note: `Deducted for order completion (#${order._id})`,
         });
+
         // Log activity for each item
         await ActivityLog.create({
           user_id,
@@ -714,19 +749,24 @@ exports.confirmDelivery = async (req, res) => {
     await order.save();
 
     // Deduct stock and update sales
+    // Create transaction or ensure atomicity if needed
+    // Update linked Sale record
+    const sale = await Sale.findOne({
+      where: { order_request_id: order._id },
+    });
+    if (sale) {
+      sale.status = "completed";
+      sale.completed_at = new Date();
+      await sale.save();
+    }
+
+    // Deduct stock
     const orderItems = await OrderRequestItem.findAll({
       where: { order_request_id: order._id },
     });
+
     for (const item of orderItems) {
-      // Find and update sale
-      const sale = await Sale.findOne({
-        where: { order_request_id: order._id, product_id: item.product_id },
-      });
-      if (sale) {
-        sale.status = "completed";
-        sale.completed_at = new Date();
-        await sale.save();
-      }
+      // Sale is already updated above, no need to find per item
 
       const product = await Product.findByPk(item.product_id);
       if (product) {
@@ -812,7 +852,18 @@ exports.confirmDelivery = async (req, res) => {
         html,
       });
     }
-    res.json({ success: true, data: orderRequest });
+    const populatedOrder = await OrderRequest.findByPk(order._id, {
+      include: [
+        {
+          model: OrderRequestItem,
+          as: "items",
+          include: [{ model: Product, as: "product" }],
+        },
+        { model: User, as: "requester" },
+        { model: ApproveRequest, as: "approve_request" },
+      ],
+    });
+    res.json({ success: true, data: populatedOrder });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

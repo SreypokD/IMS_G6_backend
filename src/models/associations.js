@@ -114,6 +114,15 @@ Sale.belongsTo(User, {
 });
 User.hasMany(Sale, { foreignKey: "customer_id", as: "sales" });
 
+// Sale-OrderRequest
+Sale.belongsTo(OrderRequest, {
+  foreignKey: "order_request_id",
+  as: "order_request",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+OrderRequest.hasMany(Sale, { foreignKey: "order_request_id", as: "sales" });
+
 // Sale-SaleItem
 Sale.hasMany(SaleItem, { foreignKey: "sale_id", as: "items" });
 SaleItem.belongsTo(Sale, { foreignKey: "sale_id", as: "sale" });

@@ -471,6 +471,9 @@ async function seed() {
       "update_order_request",
       "delete_order_request",
       "post_order_request",
+      // Approvals
+      "view_approve_request",
+      "update_approve_request",
       // Confirm Delivery
       "view_confirm_delivery",
       "update_confirm_delivery",
