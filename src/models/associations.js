@@ -58,7 +58,23 @@ User.hasMany(OrderRequest, {
   as: "order_requests",
 });
 
-// OrderRequest-OrderRequestItem (Products)
+// OrderRequest-Approver (User)
+OrderRequest.belongsTo(User, {
+  foreignKey: "approved_by",
+  as: "approver",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+// OrderRequest-Confirmer (User)
+OrderRequest.belongsTo(User, {
+  foreignKey: "confirmed_by",
+  as: "confirmer",
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE",
+});
+
+// OrderRequest-OrderRequestItem
 OrderRequest.hasMany(OrderRequestItem, {
   foreignKey: "order_request_id",
   as: "items",
@@ -116,27 +132,31 @@ ActivityLog.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(ActivityLog, { foreignKey: "user_id", as: "activity_logs" });
 
 // Notification-User
-User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
 Notification.belongsTo(User, { foreignKey: "user_id", as: "user" });
+User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
 
-// ApproveRequest-OrderRequest
+// ApproveRequest - OrderRequest (one-to-one)
+ApproveRequest.belongsTo(OrderRequest, {
+  foreignKey: "order_request_id",
+  as: "order_request",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
 OrderRequest.hasOne(ApproveRequest, {
   foreignKey: "order_request_id",
   as: "approve_request",
 });
-ApproveRequest.belongsTo(OrderRequest, {
-  foreignKey: "order_request_id",
-  as: "order_request",
-});
 
-// ConfirmDelivery-OrderRequest
-OrderRequest.hasOne(ConfirmDelivery, {
-  foreignKey: "order_request_id",
-  as: "confirm_delivery",
-});
+// ConfirmDelivery - OrderRequest (one-to-one)
 ConfirmDelivery.belongsTo(OrderRequest, {
   foreignKey: "order_request_id",
   as: "order_request",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+OrderRequest.hasOne(ConfirmDelivery, {
+  foreignKey: "order_request_id",
+  as: "confirm_delivery",
 });
 
 // Stock-Product

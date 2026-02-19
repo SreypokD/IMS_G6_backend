@@ -5,7 +5,6 @@ const Sale = require("../models/Sale");
 const Product = require("../models/Product");
 const User = require("../models/User");
 const ApproveRequest = require("../models/ApproveRequest");
-const ConfirmDelivery = require("../models/ConfirmDelivery");
 const Stock = require("../models/Stock");
 const OrderRequestItem = require("../models/OrderRequestItem");
 const Permission = require("../models/Permission");
@@ -78,6 +77,16 @@ exports.getAll = async (req, res) => {
         include: [{ model: Product, as: "product" }],
       },
       { model: User, as: "requester" },
+      {
+        model: User,
+        as: "approver",
+        attributes: ["_id", "first_name", "last_name", "email"],
+      },
+      {
+        model: User,
+        as: "confirmer",
+        attributes: ["_id", "first_name", "last_name", "email"],
+      },
       // Add where for approve_request if approve_status is set
       approve_status
         ? {
@@ -86,14 +95,6 @@ exports.getAll = async (req, res) => {
             where: { status: approve_status },
           }
         : { model: ApproveRequest, as: "approve_request" },
-      // Add where for confirm_delivery if delivery_status is set
-      delivery_status
-        ? {
-            model: ConfirmDelivery,
-            as: "confirm_delivery",
-            where: { status: delivery_status },
-          }
-        : { model: ConfirmDelivery, as: "confirm_delivery" },
     ];
     // Only admin/staff see all, others see only their own
     if (!req.user || (req.user.role !== "admin" && req.user.role !== "staff")) {
@@ -154,7 +155,6 @@ exports.create = async (req, res) => {
         },
         { model: User, as: "requester" },
         { model: ApproveRequest, as: "approve_request" },
-        { model: ConfirmDelivery, as: "confirm_delivery" },
       ],
     });
 
@@ -385,7 +385,6 @@ exports.updateStatus = async (req, res) => {
           },
           { model: User, as: "requester" },
           { model: ApproveRequest, as: "approve_request" },
-          { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
       const data = orderRequest.toJSON();
@@ -399,7 +398,6 @@ exports.updateStatus = async (req, res) => {
           },
           { model: User, as: "requester" },
           { model: ApproveRequest, as: "approve_request" },
-          { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
       return res.json({ success: true, data: populatedOrder });
@@ -515,7 +513,6 @@ exports.updateStatus = async (req, res) => {
           },
           { model: User, as: "requester" },
           { model: ApproveRequest, as: "approve_request" },
-          { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
       const data = orderRequest.toJSON();
@@ -582,7 +579,6 @@ exports.updateStatus = async (req, res) => {
           },
           { model: User, as: "requester" },
           { model: ApproveRequest, as: "approve_request" },
-          { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
       const o = populated.toJSON();
@@ -596,7 +592,6 @@ exports.updateStatus = async (req, res) => {
           },
           { model: User, as: "requester" },
           { model: ApproveRequest, as: "approve_request" },
-          { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
       return res.json({ success: true, data: populatedOrder });
@@ -630,7 +625,6 @@ exports.updateStatus = async (req, res) => {
           { model: User, as: "approvedBy", foreignKey: "approved_by" },
           { model: User, as: "updatedBy", foreignKey: "updated_by" },
           { model: ApproveRequest, as: "approve_request" },
-          { model: ConfirmDelivery, as: "confirm_delivery" },
         ],
       });
       const o = populated.toJSON();
@@ -698,10 +692,7 @@ exports.cancelOrderRequest = async (req, res) => {
       });
     }
     const orderRequest = await OrderRequest.findByPk(order._id, {
-      include: [
-        { model: Product, as: "product" },
-        { model: User, as: "requester" },
-      ],
+      include: [{ model: ApproveRequest, as: "approve_request" }],
     });
     res.json({ success: true, data: orderRequest });
   } catch (err) {
@@ -776,22 +767,10 @@ exports.confirmDelivery = async (req, res) => {
       entity_type: "Order Request",
       entity_id: order._id,
     });
-    let confirmDelivery = await ConfirmDelivery.findOne({
-      where: { order_request_id: order._id },
-    });
-    if (!confirmDelivery) {
-      confirmDelivery = await ConfirmDelivery.create({
-        order_request_id: order._id,
-        status: "completed", // align with model and order status
-        confirmed_by: req.user._id,
-        confirmed_at: new Date(),
-      });
-    } else {
-      confirmDelivery.status = "completed";
-      confirmDelivery.confirmed_by = req.user._id;
-      confirmDelivery.confirmed_at = new Date();
-      await confirmDelivery.save();
-    }
+    // Verify confirmDelivery logic: Update order fields directly
+    order.confirmed_by = req.user._id;
+    order.confirmed_at = new Date();
+    await order.save();
 
     // Send email to requester
     const requester = await User.findByPk(order.requester_id);
@@ -840,24 +819,6 @@ exports.confirmDelivery = async (req, res) => {
 };
 
 // Generic update for ConfirmDelivery (e.g. is_active, status override)
-exports.updateConfirmDelivery = async (req, res) => {
-  try {
-    const confirmDelivery = await ConfirmDelivery.findByPk(req.params.id);
-    if (!confirmDelivery) return res.status(404).json({ error: "Not found" });
-
-    const { is_active, status } = req.body;
-
-    // Only update fields that are provided
-    if (is_active !== undefined) confirmDelivery.is_active = is_active;
-    if (status !== undefined) confirmDelivery.status = status;
-
-    await confirmDelivery.save();
-    return res.json({ success: true, data: confirmDelivery });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
-
 // Update order request details (notes, delivery_date, items, etc.)
 exports.update = async (req, res) => {
   try {
@@ -933,7 +894,6 @@ exports.update = async (req, res) => {
         },
         { model: User, as: "requester" },
         { model: ApproveRequest, as: "approve_request" },
-        { model: ConfirmDelivery, as: "confirm_delivery" },
       ],
     });
     return res.json({ success: true, data: populatedOrder });
@@ -959,17 +919,7 @@ exports.getPendingOrderRequestCount = async (req, res) => {
   }
 };
 
-// Remove confirm delivery record
-exports.removeConfirmDelivery = async (req, res) => {
-  try {
-    const confirmDelivery = await ConfirmDelivery.findByPk(req.params.id);
-    if (!confirmDelivery) return res.status(404).json({ error: "Not found" });
-    await confirmDelivery.destroy();
-    return res.json({ message: "Deleted" });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
+// Remove confirm delivery record - Removed as ConfirmDelivery model is deleted
 
 exports.delete = async (req, res) => {
   try {
@@ -982,9 +932,6 @@ exports.delete = async (req, res) => {
 
     // Delete associated approve request
     await ApproveRequest.destroy({ where: { order_request_id: order._id } });
-
-    // Delete associated confirm delivery
-    await ConfirmDelivery.destroy({ where: { order_request_id: order._id } });
 
     // Delete associated sales (if any, though usually completed orders shouldn't be deleted easily)
     await Sale.destroy({ where: { order_request_id: order._id } });

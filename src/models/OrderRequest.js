@@ -48,6 +48,18 @@ const OrderRequest = sequelize.define(
     },
     approved_by: DataTypes.STRING(24),
     approved_date: { type: DataTypes.DATE },
+    // Alias for consistency with schema
+    approved_at: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.getDataValue("approved_date");
+      },
+      set(value) {
+        this.setDataValue("approved_date", value);
+      },
+    },
+    confirmed_by: { type: DataTypes.STRING(24) },
+    confirmed_at: { type: DataTypes.DATE },
     notified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

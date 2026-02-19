@@ -13,7 +13,6 @@ const {
   Notification,
   ActivityLog,
   ApproveRequest,
-  ConfirmDelivery,
   Sale,
   SaleItem,
   Expense,
@@ -472,6 +471,9 @@ async function seed() {
       "update_order_request",
       "delete_order_request",
       "post_order_request",
+      // Confirm Delivery
+      "view_confirm_delivery",
+      "update_confirm_delivery",
       // Sales
       "view_sale",
       "create_sale",
@@ -769,7 +771,7 @@ async function seed() {
       quantity: 12, // Bought 12
       location: "Main Warehouse",
       completed_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-      note: "Initial purchase",
+      notes: "Initial purchase",
       balance: 12,
     },
     {
@@ -781,7 +783,7 @@ async function seed() {
       quantity: 2, // Sold 2, Remaining: 10 (Matches Product stock)
       location: "Showroom",
       completed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      note: "Customer sale",
+      notes: "Customer sale",
       balance: 10,
     },
 
@@ -795,7 +797,7 @@ async function seed() {
       quantity: 20,
       location: "Main Warehouse",
       completed_at: new Date(),
-      note: "Initial stock",
+      notes: "Initial stock",
       balance: 20,
     },
 
@@ -809,7 +811,7 @@ async function seed() {
       quantity: 100,
       location: "Main Warehouse",
       completed_at: new Date(),
-      note: "Bulk purchase",
+      notes: "Bulk purchase",
       balance: 100,
     },
 
@@ -823,7 +825,7 @@ async function seed() {
       quantity: 15,
       location: "Main Warehouse",
       completed_at: new Date(),
-      note: "Initial stock",
+      notes: "Initial stock",
       balance: 15,
     },
 
@@ -837,7 +839,7 @@ async function seed() {
       quantity: 30,
       location: "Main Warehouse",
       completed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      note: "New shipment",
+      notes: "New shipment",
       balance: 30,
     },
     {
@@ -849,7 +851,7 @@ async function seed() {
       quantity: 5, // Damaged 5, Remaining: 25
       location: "Main Warehouse",
       completed_at: new Date(),
-      note: "Damaged during transport",
+      notes: "Damaged during transport",
       balance: 25,
     },
   ]);
@@ -965,6 +967,8 @@ async function seed() {
     approved_by: staffUser._id,
     approved_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
     notified: true,
+    confirmed_by: adminUser._id,
+    confirmed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
   });
   orderRequests.push(completedOrder);
 
@@ -977,14 +981,7 @@ async function seed() {
     approved_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
   });
 
-  // Create ConfirmDelivery
-  await ConfirmDelivery.create({
-    order_request_id: completedOrder._id,
-    status: "approved",
-    delivery_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    confirmed_by: adminUser._id,
-    confirmed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-  });
+  // Create ConfirmDelivery - Removed, merged into OrderRequest
 
   // 6. Another Completed Order
   const completedOrder2 = await OrderRequest.create({
@@ -997,6 +994,8 @@ async function seed() {
     approved_by: adminUser._id,
     approved_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
     notified: true,
+    confirmed_by: staffUser._id,
+    confirmed_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
   });
   orderRequests.push(completedOrder2);
 
@@ -1007,13 +1006,7 @@ async function seed() {
     approved_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
   });
 
-  await ConfirmDelivery.create({
-    order_request_id: completedOrder2._id,
-    status: "approved",
-    delivery_date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-    confirmed_by: staffUser._id,
-    confirmed_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-  });
+  // Create ConfirmDelivery - Removed, merged into OrderRequest
 
   // Seed OrderRequestItems
   for (const order of orderRequests) {
@@ -1059,6 +1052,7 @@ async function seed() {
     for (let j = 0; j < numItems; j++) {
       const product = products[Math.floor(Math.random() * products.length)];
       const qty = Math.floor(Math.random() * 5) + 1;
+      const subtotal = product.price * qty;
       await SaleItem.create({
         sale_id: sale._id,
         product_id: product._id,
@@ -1066,9 +1060,15 @@ async function seed() {
         price: product.price,
         cost_price: product.price * 0.7, // 30% margin
         discount: 0,
+        subtotal: subtotal,
       });
-      totalAmount += product.price * qty;
+      totalAmount += subtotal;
     }
+    await sale.update({
+      total_amount: totalAmount,
+      grand_total: totalAmount,
+      payment_status: "paid",
+    });
   }
 
   // Seed Expenses
@@ -1134,7 +1134,6 @@ async function seed() {
       details: "Admin approved order",
       entity_type: "OrderRequest",
       entity_id: approvedOrder._id,
-    
     }),
   ]);
 

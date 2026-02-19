@@ -62,20 +62,11 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: "active",
     },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
-    },
     customer_type: {
-      type: DataTypes.ENUM("individual", "business"),
+      type: DataTypes.ENUM("business"),
       allowNull: true,
     },
     company_name: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    position: {
       type: DataTypes.STRING,
       allowNull: true,
     },

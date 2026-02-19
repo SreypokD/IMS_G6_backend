@@ -23,7 +23,26 @@ const ApproveRequest = sequelize.define(
     status: { type: DataTypes.STRING, defaultValue: "pending" },
     admin_remarks: { type: DataTypes.STRING },
     rejection_reason: { type: DataTypes.STRING },
-    approved_by: { type: DataTypes.STRING(24) },
+    approved_by: {
+      type: DataTypes.STRING(24),
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "_id",
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
+    },
+    confirmed_by: {
+      type: DataTypes.STRING(24),
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "_id",
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
+    },
     approved_date: { type: DataTypes.DATE },
     is_active: {
       type: DataTypes.BOOLEAN,

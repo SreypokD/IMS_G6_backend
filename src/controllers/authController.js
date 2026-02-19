@@ -184,10 +184,10 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     // Fetch user with permission (role) object
-    // Allow login with email, phone, or username
+    // Allow login with email, phone
     const user = await User.findOne({
       where: {
-        [Op.or]: [{ email }, { phone: email }, { username: email }],
+        [Op.or]: [{ email }, { phone: email }],
       },
       include: [{ model: Permission, as: "permission" }],
     });

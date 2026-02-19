@@ -32,7 +32,6 @@ const permissionRoutes = require("./routes/permissions");
 const userRoutes = require("./routes/users");
 const uploadRoutes = require("./routes/upload");
 const approveRequestsRoutes = require("./routes/approveRequests");
-const confirmDeliveriesRoutes = require("./routes/confirmDeliveries");
 const salesRoutes = require("./routes/sales");
 const stockRoutes = require("./routes/stocks");
 const notificationsRoutes = require("./routes/notifications");
@@ -44,7 +43,6 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api/order-requests", orderRequestRoutes);
 app.use("/api/approve-requests", approveRequestsRoutes);
-app.use("/api/confirm-deliveries", confirmDeliveriesRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/reports", reportsRoutes);
 app.use("/api/permissions", permissionRoutes);
@@ -127,17 +125,15 @@ async function startServer() {
     // Attempt to clean up duplicate indexes on users table before sync
     try {
       const [results] = await sequelize.query("SHOW INDEX FROM users");
-      // Filter for email and username indexes
+      // Filter for email indexes
       const userIndexes = results.filter(
-        (idx) =>
-          (idx.Column_name === "email" || idx.Column_name === "username") &&
-          idx.Key_name !== "PRIMARY",
+        (idx) => idx.Column_name === "email" && idx.Key_name !== "PRIMARY",
       );
       const uniqueKeys = [...new Set(userIndexes.map((idx) => idx.Key_name))];
 
       if (uniqueKeys.length > 0) {
         console.log(
-          `Found ${uniqueKeys.length} indexes on users (email/username). Cleaning up...`,
+          `Found ${uniqueKeys.length} indexes on users (email). Cleaning up...`,
         );
         for (const key of uniqueKeys) {
           try {

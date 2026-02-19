@@ -116,7 +116,7 @@ exports.create = async (req, res) => {
         quantity: Number(req.body.stock),
         balance: Number(req.body.stock),
         reason: "Other",
-        note: "Initial Stock",
+        notes: "Initial Stock",
         location: "Main Warehouse",
         completed_at: new Date(),
       });

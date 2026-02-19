@@ -85,7 +85,7 @@ exports.create = async (req, res) => {
       reason,
       batch_number,
       location,
-      note,
+      notes,
       completed_at,
       user_id,
     } = req.body;
@@ -145,7 +145,7 @@ exports.create = async (req, res) => {
         reason,
         batch_number,
         location,
-        note,
+        notes,
         completed_at: completed_at || new Date(),
       },
       { transaction },
@@ -278,7 +278,9 @@ exports.summary = async (req, res) => {
         ? currentBalance > 0
           ? 100
           : 0
-        : Math.round(((currentBalance - balance30DaysAgo) / balance30DaysAgo) * 100);
+        : Math.round(
+            ((currentBalance - balance30DaysAgo) / balance30DaysAgo) * 100,
+          );
 
     res.json({
       totalStockIn: totalStockIn || 0,
@@ -301,8 +303,16 @@ exports.update = async (req, res) => {
   const t = await Stock.sequelize.transaction();
   try {
     const { id } = req.params;
-    const { product_id, quantity, type, batch_number, reason, location, note, status } =
-      req.body;
+    const {
+      product_id,
+      quantity,
+      type,
+      batch_number,
+      reason,
+      location,
+      notes,
+      status,
+    } = req.body;
 
     const stock = await Stock.findByPk(id, { transaction: t });
     if (!stock) {
@@ -386,7 +396,7 @@ exports.update = async (req, res) => {
     stock.reason = reason || stock.reason;
     stock.location = location || stock.location;
     stock.location = location || stock.location;
-    stock.note = note || stock.note;
+    stock.notes = notes || stock.notes;
     if (status) stock.status = status;
     // stock.balance updated above
 

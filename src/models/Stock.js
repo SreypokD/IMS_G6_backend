@@ -62,7 +62,7 @@ const Stock = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    note: {
+    notes: {
       type: DataTypes.STRING,
       allowNull: true,
     },

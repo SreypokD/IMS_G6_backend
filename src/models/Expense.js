@@ -27,8 +27,6 @@ const Expense = sequelize.define(
       },
       onDelete: "RESTRICT",
       onUpdate: "CASCADE",
-      onDelete: "RESTRICT",
-      onUpdate: "CASCADE",
     },
     status: {
       type: DataTypes.STRING,

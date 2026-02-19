@@ -206,6 +206,9 @@ exports.create = async (req, res) => {
       { transaction: t },
     );
 
+    let totalAmount = 0;
+    const saleItemsData = [];
+
     for (const item of salesItems) {
       const productId = item.product_id || item.product;
       const quantity = Number(item.quantity) || 0;
@@ -227,18 +230,18 @@ exports.create = async (req, res) => {
       const newStock = product.stock - quantity;
       await product.update({ stock: newStock }, { transaction: t });
 
-      // 3. Create SaleItem
-      await SaleItem.create(
-        {
-          sale_id: sale._id,
-          product_id: productId,
-          quantity: quantity,
-          price: price,
-          discount: discount,
-          cost_price: product.cost_price, // Snapshot cost at time of sale
-        },
-        { transaction: t },
-      );
+      const subtotal = price * quantity * (1 - discount / 100);
+      totalAmount += subtotal;
+
+      saleItemsData.push({
+        sale_id: sale._id,
+        product_id: productId,
+        quantity: quantity,
+        price: price,
+        discount: discount,
+        cost_price: product.cost_price, // Snapshot cost at time of sale
+        subtotal: subtotal,
+      });
 
       // 4. Create Stock Out Record
       await Stock.create(
@@ -249,12 +252,29 @@ exports.create = async (req, res) => {
           quantity: quantity,
           balance: newStock,
           location: "Showroom",
-          note: `Sale #${sale._id} - ${notes || "Direct Sale"}`,
+          notes: `Sale #${sale._id} - ${notes || "Direct Sale"}`, // Updated field name
           completed_at: new Date(),
         },
         { transaction: t },
       );
     }
+
+    // 3. Create SaleItems
+    await SaleItem.bulkCreate(saleItemsData, { transaction: t });
+
+    // Update Sale with totals
+    const saleDiscount = Number(req.body.discount) || 0;
+    const grandTotal = totalAmount - saleDiscount;
+
+    await sale.update(
+      {
+        total_amount: totalAmount,
+        discount: saleDiscount,
+        grand_total: grandTotal < 0 ? 0 : grandTotal,
+        payment_status: req.body.payment_status || "paid",
+      },
+      { transaction: t },
+    );
 
     await t.commit();
     res.status(201).json({ success: true, data: sale });
@@ -302,7 +322,7 @@ exports.update = async (req, res) => {
               quantity: item.quantity,
               balance: product.stock + item.quantity, // Balance after revert
               location: "Showroom",
-              note: `Sale #${sale._id} Updated (Revert)`,
+              notes: `Sale #${sale._id} Updated (Revert)`,
               completed_at: new Date(),
             },
             { transaction: t },
@@ -355,7 +375,7 @@ exports.update = async (req, res) => {
             quantity: quantity,
             balance: newStock,
             location: "Showroom",
-            note: `Sale #${sale._id} Updated`,
+            notes: `Sale #${sale._id} Updated`,
             completed_at: new Date(),
           },
           { transaction: t },
@@ -370,6 +390,7 @@ exports.update = async (req, res) => {
         payment_method: payment_method || sale.payment_method,
         notes: notes !== undefined ? notes : sale.notes,
         status: status || sale.status,
+        payment_status: req.body.payment_status || sale.payment_status,
         is_active: is_active !== undefined ? is_active : sale.is_active,
       },
       { transaction: t },
@@ -429,7 +450,7 @@ exports.remove = async (req, res) => {
               quantity: item.quantity,
               balance: product.stock + item.quantity,
               location: "Showroom",
-              note: `Sale #${sale._id} Deleted (Revert)`,
+              notes: `Sale #${sale._id} Deleted (Revert)`,
               completed_at: new Date(),
             },
             { transaction: t },

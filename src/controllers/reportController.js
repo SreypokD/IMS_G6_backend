@@ -13,7 +13,7 @@ const { sequelize } = require("../models");
 exports.trends = async (req, res) => {
   try {
     const { from, to } = req.query;
-    if (req.user && req.user.role === 'customer') {
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
        return res.status(403).json({ success: false, error: "Access denied" });
     }
     let startDate, endDate;
@@ -77,7 +77,7 @@ exports.trends = async (req, res) => {
 };
 
 exports.inventorySummary = async (req, res) => {
-  if (req.user && req.user.role === 'customer') {
+  if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
        return res.status(403).json({ success: false, error: "Access denied" });
   }
   const totalSuppliers = await Supplier.count();
@@ -93,7 +93,7 @@ exports.orderStats = async (req, res) => {
   const where = {};
   
   // Filter by user if not admin/staff
-  if (req.user && req.user.role === 'customer') {
+  if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
       where.requester_id = req.user._id;
   }
 
@@ -125,8 +125,8 @@ exports.activityLogs = async (req, res) => {
     const { startDate, endDate } = req.query;
 
     const where = {};
-    // Filter by user if customer
-    if (req.user && req.user.role === 'customer') {
+    // Filter by user if not admin/staff
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
         where.user_id = req.user._id;
     }
 
@@ -161,6 +161,9 @@ exports.activityLogs = async (req, res) => {
 };
 exports.financialSummary = async (req, res) => {
   try {
+    if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
+       return res.status(403).json({ success: false, error: "Access denied" });
+    }
     const { startDate, endDate } = req.query;
     const dateFilter = {};
     const expenseDateFilter = {};

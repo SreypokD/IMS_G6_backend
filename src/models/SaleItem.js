@@ -25,6 +25,7 @@ const SaleItem = sequelize.define(
     price: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
     cost_price: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
     discount: { type: DataTypes.DECIMAL(5, 2), defaultValue: 0 },
+    subtotal: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
   },
   { timestamps: true, tableName: "sale_items" },
 );
