@@ -1084,9 +1084,7 @@ async function seed() {
     "Salary",
     "Inventory",
     "Marketing",
-    "Miscellaneous",
     "Transport",
-    "Maintenance",
     "Other",
   ];
   for (let i = 0; i < 50; i++) {
