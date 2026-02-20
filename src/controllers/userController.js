@@ -17,6 +17,7 @@ exports.getAll = async (req, res) => {
     const search = req.query.search || "";
     const permission_id = req.query.permission_id || "";
     const status = req.query.status || "";
+    const user_type = req.query.user_type || "";
     const offset = (page - 1) * limit;
     const where = {};
     if (search) {
@@ -33,6 +34,9 @@ exports.getAll = async (req, res) => {
     }
     if (status) {
       where.status = status;
+    }
+    if (user_type) {
+      where.user_type = user_type;
     }
     const totalItems = await User.count({ where });
     const totalPages = Math.ceil(totalItems / limit);
@@ -125,7 +129,7 @@ exports.create = async (req, res) => {
       status,
       address,
       profile,
-      customer_type,
+      user_type,
       company_name,
       company_registration_no,
       request_purpose,
@@ -134,7 +138,8 @@ exports.create = async (req, res) => {
       product_categories,
       id_card_or_business_license,
       shop_photo,
-      location_photo,
+      location_lat,
+      location_lng,
       note_from_customer,
     } = req.body;
 
@@ -147,7 +152,7 @@ exports.create = async (req, res) => {
       permission_id,
       status: status || "active", // Default to active for admin-created users
       profile,
-      customer_type,
+      user_type,
       company_name,
       company_registration_no,
       request_purpose,
@@ -156,7 +161,8 @@ exports.create = async (req, res) => {
       product_categories,
       id_card_or_business_license,
       shop_photo,
-      location_photo,
+      location_lat,
+      location_lng,
       note_from_customer,
     };
 
@@ -240,7 +246,7 @@ exports.update = async (req, res) => {
       "profile",
       "permission_id",
       "status",
-      "customer_type",
+      "user_type",
       "company_name",
       "company_registration_no",
       "request_purpose",
@@ -249,7 +255,8 @@ exports.update = async (req, res) => {
       "product_categories",
       "id_card_or_business_license",
       "shop_photo",
-      "location_photo",
+      "location_lat",
+      "location_lng",
       "agree_terms",
       "note_from_customer",
     ];

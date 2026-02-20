@@ -535,6 +535,7 @@ async function seed() {
     },
     profile: null,
     permission_id: adminPermission._id,
+    user_type: "internal",
   });
 
   const staffUser = await User.create({
@@ -555,6 +556,7 @@ async function seed() {
     },
     profile: null,
     permission_id: staffPermission._id,
+    user_type: "internal",
   });
 
   const customerPassword = await bcrypt.hash("customer123", 10);
@@ -576,6 +578,7 @@ async function seed() {
     },
     profile: null,
     permission_id: customerPermission._id,
+    user_type: "external",
   });
 
   // seed products

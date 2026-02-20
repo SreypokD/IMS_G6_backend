@@ -39,6 +39,10 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: "user",
     },
+    user_type: {
+      type: DataTypes.ENUM("internal", "external"),
+      allowNull: false,
+    },
     address: {
       type: DataTypes.JSON,
       allowNull: true,
@@ -61,10 +65,6 @@ const User = sequelize.define(
       type: DataTypes.ENUM("active", "inactive", "pending"),
       allowNull: false,
       defaultValue: "active",
-    },
-    customer_type: {
-      type: DataTypes.ENUM("business"),
-      allowNull: true,
     },
     company_name: {
       type: DataTypes.STRING,
@@ -98,8 +98,12 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    location_photo: {
-      type: DataTypes.STRING,
+    location_lat: {
+      type: DataTypes.DOUBLE,
+      allowNull: true,
+    },
+    location_lng: {
+      type: DataTypes.DOUBLE,
       allowNull: true,
     },
     agree_terms: {

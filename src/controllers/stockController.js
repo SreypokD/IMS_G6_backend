@@ -14,8 +14,8 @@ exports.getAll = async (req, res) => {
     }
     const offset = (page - 1) * limit;
     const where = {};
-    if (req.query.type && req.query.type !== "All Transactions") {
-      where.type = req.query.type === "Stock In" ? "in" : "out";
+    if (req.query.type && ["in", "out"].includes(req.query.type)) {
+      where.type = req.query.type;
     }
     if (req.query.product) {
       where.product_id = req.query.product;

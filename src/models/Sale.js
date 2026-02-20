@@ -36,7 +36,7 @@ const Sale = sequelize.define(
     payment_method: { type: DataTypes.STRING, defaultValue: "Cash" },
     payment_status: { type: DataTypes.STRING, defaultValue: "paid" },
     notes: { type: DataTypes.TEXT },
-    status: { type: DataTypes.STRING, defaultValue: "completed" },
+    status: { type: DataTypes.STRING, defaultValue: "Completed" },
     completed_at: { type: DataTypes.DATE },
     is_active: {
       type: DataTypes.BOOLEAN,
