@@ -6,6 +6,7 @@ const { sendMail } = require("../utils/mail.util");
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
 const REFRESH_SECRET =
   process.env.REFRESH_SECRET || process.env.JWT_SECRET + "_refresh";
 const refreshTokens = new Set(); // In-memory store for demo; use DB/Redis in production

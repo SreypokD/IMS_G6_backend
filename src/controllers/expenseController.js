@@ -102,10 +102,17 @@ exports.remove = async (req, res) => {
   try {
     const expense = await Expense.findByPk(req.params.id);
     if (!expense) return res.status(404).json({ error: "Not found" });
-
     await expense.destroy();
     res.json({ success: true, message: "Deleted" });
   } catch (err) {
+    // Handle foreign key constraint violations (expense is referenced by sale_items, stocks, etc.)
+    if (err.original && err.original.errno === 1451) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "Cannot delete this expense because it is referenced by existing expense records.",
+      });
+    }
     res.status(500).json({ success: false, error: err.message });
   }
 };

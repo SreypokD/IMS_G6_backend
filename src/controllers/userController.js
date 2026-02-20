@@ -317,10 +317,22 @@ exports.update = async (req, res) => {
 
 // Delete a user
 exports.remove = async (req, res) => {
-  const user = await User.findByPk(req.params.id);
-  if (!user) return res.status(404).json({ error: "Not found" });
-  await user.destroy();
-  res.json({ message: "Deleted" });
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ error: "Not found" });
+    await user.destroy();
+    res.json({ success: true, message: "Deleted" });
+  } catch (err) {
+    // Handle foreign key constraint violations (user is referenced by sale_items, stocks, etc.)
+    if (err.original && err.original.errno === 1451) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "Cannot delete this user because it is referenced by existing user records.",
+      });
+    }
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 // Reset password (admin)

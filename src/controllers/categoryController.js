@@ -63,8 +63,20 @@ exports.update = async (req, res) => {
 };
 
 exports.remove = async (req, res) => {
-  const category = await Category.findByPk(req.params.id);
-  if (!category) return res.status(404).json({ error: "Not found" });
-  await category.destroy();
-  res.json({ message: "Deleted" });
+  try {
+    const category = await Category.findByPk(req.params.id);
+    if (!category) return res.status(404).json({ error: "Not found" });
+    await category.destroy();
+    res.json({ success: true, message: "Deleted" });
+  } catch (err) {
+    // Handle foreign key constraint violations (category is referenced by products)
+    if (err.original && err.original.errno === 1451) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "Cannot delete this category because it is referenced by existing products.",
+      });
+    }
+    res.status(500).json({ success: false, error: err.message });
+  }
 };

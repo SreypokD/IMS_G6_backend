@@ -2,6 +2,7 @@ const ActivityLog = require("../models/ActivityLog");
 const Notification = require("../models/Notification");
 const OrderRequest = require("../models/OrderRequest");
 const Sale = require("../models/Sale");
+const { SaleItem } = require("../models/associations"); 
 const Product = require("../models/Product");
 const User = require("../models/User");
 const ApproveRequest = require("../models/ApproveRequest");
@@ -266,8 +267,6 @@ exports.updateStatus = async (req, res) => {
         payment_status: "pending", // Default
         notes: `Generated from Order Request #${order._id}`,
       });
-
-      const { SaleItem } = require("../models/associations"); // Ensure SaleItem is imported if not already globally available or needed
 
       // 3. Reserve stock and create SaleItems
       for (const item of orderItems) {

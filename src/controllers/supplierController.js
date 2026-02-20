@@ -109,9 +109,22 @@ exports.update = async (req, res) => {
   }
 };
 
+// Delete a supplier
 exports.remove = async (req, res) => {
-  const supplier = await Supplier.findByPk(req.params.id);
-  if (!supplier) return res.status(404).json({ error: "Not found" });
-  await supplier.destroy();
-  res.json({ message: "Deleted" });
+  try {
+    const supplier = await Supplier.findByPk(req.params.id);
+    if (!supplier) return res.status(404).json({ error: "Not found" });
+    await supplier.destroy();
+    res.json({ success: true, message: "Deleted" });
+  } catch (err) {
+    // Handle foreign key constraint violations (supplier is referenced by products)
+    if (err.original && err.original.errno === 1451) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "Cannot delete this supplier because it is referenced    existing products.",
+      });
+    }
+    res.status(500).json({ success: false, error: err.message });
+  }
 };

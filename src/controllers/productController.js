@@ -162,8 +162,20 @@ exports.update = async (req, res) => {
 };
 
 exports.remove = async (req, res) => {
-  const product = await Product.findByPk(req.params.id);
-  if (!product) return res.status(404).json({ error: "Not found" });
-  await product.destroy();
-  res.json({ message: "Deleted" });
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (!product) return res.status(404).json({ error: "Not found" });
+    await product.destroy();
+    res.json({ success: true, message: "Deleted" });
+  } catch (err) {
+    // Handle foreign key constraint violations (product is referenced by sale_items, stocks, etc.)
+    if (err.original && err.original.errno === 1451) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "Cannot delete this product because it is referenced by existing sales or stock records.",
+      });
+    }
+    res.status(500).json({ success: false, error: err.message });
+  }
 };

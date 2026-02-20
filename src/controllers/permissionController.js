@@ -89,11 +89,18 @@ exports.update = async (req, res) => {
 exports.remove = async (req, res) => {
   try {
     const permission = await Permission.findByPk(req.params.id);
-    if (!permission)
-      return res.status(404).json({ error: "Permission not found" });
+    if (!permission) return res.status(404).json({ error: "Not found" });
     await permission.destroy();
-    res.json({ success: true, message: "Permission deleted" });
+    res.json({ success: true, message: "Deleted" });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    // Handle foreign key constraint violations (product is referenced by sale_items, stocks, etc.)
+    if (err.original && err.original.errno === 1451) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "Cannot delete this permission because it is referenced by existing user records.",
+      });
+    }
+    res.status(500).json({ success: false, error: err.message });
   }
 };
