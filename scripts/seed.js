@@ -172,17 +172,17 @@ async function seed() {
   // Seed suppliers
   const suppliers = await Supplier.bulkCreate([
     {
-      company_name: "Acme Corp",
+      company_name: "TechVision Electronics Co., Ltd.",
       location: "Phnom Penh",
-      contact_person: "John Doe",
-      contact_position: "Manager",
-      contact_email: "acme@example.com",
-      contact_phone: "0123456789",
+      contact_person: "Sovann Chea",
+      contact_position: "General Manager",
+      contact_email: "sovann.chea@techvision.com.kh",
+      contact_phone: "023 456 789",
       address: {
-        street: "Main St",
-        house: "123",
-        village: "Central",
-        commune: "Boeng Keng Kang",
+        street: "Monivong Blvd",
+        house: "45",
+        village: "Phsar Daeum Thkov",
+        commune: "Tonle Bassac",
         district: "Chamkar Mon",
         province: "Phnom Penh",
       },
@@ -190,16 +190,16 @@ async function seed() {
       status: "Active",
     },
     {
-      company_name: "Global Supplies",
+      company_name: "Angkor Stationery & Office Supplies",
       location: "Siem Reap",
-      contact_person: "Jane Smith",
-      contact_position: "Sales",
-      contact_email: "global@example.com",
-      contact_phone: "0987654321",
+      contact_person: "Bopha Lim",
+      contact_position: "Sales Director",
+      contact_email: "bopha@angkoroffice.com",
+      contact_phone: "063 761 234",
       address: {
-        street: "Market Rd",
-        house: "456",
-        village: "Old Market",
+        street: "Sivutha Blvd",
+        house: "112",
+        village: "Svay Thom",
         commune: "Svay Dangkum",
         district: "Siem Reap",
         province: "Siem Reap",
@@ -208,35 +208,35 @@ async function seed() {
       status: "Active",
     },
     {
-      company_name: "Office Essentials",
+      company_name: "Cambodian Business Hub Co., Ltd.",
       location: "Phnom Penh",
-      contact_person: "Alice Johnson",
-      contact_position: "Procurement",
-      contact_email: "office@example.com",
-      contact_phone: "011223344",
+      contact_person: "Dara Uch",
+      contact_position: "Procurement Director",
+      contact_email: "dara.uch@cambohub.com.kh",
+      contact_phone: "012 334 556",
       address: {
-        street: "Business Ave",
-        house: "789",
-        village: "Tech Park",
-        commune: "Chroy Changvar",
-        district: "Chroy Changvar",
+        street: "Norodom Blvd",
+        house: "230",
+        village: "Boeung Keng Kang I",
+        commune: "Boeung Keng Kang",
+        district: "Chamkar Mon",
         province: "Phnom Penh",
       },
       payment_term: "Net 45",
       status: "Active",
     },
     {
-      company_name: "Furniture Co",
+      company_name: "Mekong Furniture & Interiors",
       location: "Battambang",
-      contact_person: "Bob Lee",
+      contact_person: "Rathana Kong",
       contact_position: "Sales Manager",
-      contact_email: "furniture@example.com",
-      contact_phone: "022334455",
+      contact_email: "rathana@mekongfurniture.com",
+      contact_phone: "053 952 410",
       address: {
-        street: "Furniture St",
-        house: "321",
-        village: "Market Area",
-        commune: "Svay Pak",
+        street: "Street 2",
+        house: "78",
+        village: "Svay Por",
+        commune: "Svay Por",
         district: "Battambang",
         province: "Battambang",
       },
@@ -244,35 +244,35 @@ async function seed() {
       status: "Active",
     },
     {
-      company_name: "Tech Gadgets",
+      company_name: "SmartTech Distribution Pte Ltd",
       location: "Phnom Penh",
-      contact_person: "Charlie Kim",
-      contact_position: "Sales Executive",
-      contact_email: "techgadgets@example.com",
-      contact_phone: "033445566",
+      contact_person: "Chanthy Phen",
+      contact_position: "Key Account Executive",
+      contact_email: "chanthy@smartdist.com",
+      contact_phone: "078 445 667",
       address: {
-        street: "Gadget Blvd",
-        house: "654",
-        village: "Tech Park",
-        commune: "Chroy Changvar",
-        district: "Chroy Changvar",
+        street: "Russian Blvd",
+        house: "15B",
+        village: "Tuol Sangke",
+        commune: "Tuol Sangke",
+        district: "Russei Keo",
         province: "Phnom Penh",
       },
       payment_term: "Net 60",
       status: "Active",
     },
     {
-      company_name: "Stationery World",
+      company_name: "PaperLink Office Products",
       location: "Siem Reap",
-      contact_person: "Diana Prince",
+      contact_person: "Vibol Heng",
       contact_position: "Procurement Officer",
-      contact_email: "stationery@example.com",
-      contact_phone: "044556677",
+      contact_email: "vibol.heng@paperlink.net",
+      contact_phone: "063 964 123",
       address: {
-        street: "Stationery Rd",
-        house: "987",
-        village: "Market Area",
-        commune: "Svay Dangkum",
+        street: "Airport Rd",
+        house: "340",
+        village: "Kouk Chak",
+        commune: "Kouk Chak",
         district: "Siem Reap",
         province: "Siem Reap",
       },
@@ -280,16 +280,16 @@ async function seed() {
       status: "Active",
     },
     {
-      company_name: "Health & Beauty Inc",
+      company_name: "Lotus Beauty & Wellness Imports",
       location: "Phnom Penh",
-      contact_person: "Eve Adams",
+      contact_person: "Sreymom Keo",
       contact_position: "Sales Director",
-      contact_email: "healthbeauty@example.com",
-      contact_phone: "055667788",
+      contact_email: "sreymom@lotusbeauty.com.kh",
+      contact_phone: "017 556 778",
       address: {
-        street: "Beauty St",
-        house: "321",
-        village: "Wellness Area",
+        street: "Toul Kork Ave",
+        house: "88",
+        village: "Phsar Depou I",
         commune: "Toul Kork",
         district: "Toul Kork",
         province: "Phnom Penh",
@@ -298,17 +298,17 @@ async function seed() {
       status: "Active",
     },
     {
-      company_name: "Outdoor Gear Ltd",
+      company_name: "Khmer Sport & Apparel Co.",
       location: "Battambang",
-      contact_person: "Frank Miller",
-      contact_position: "Sales Manager",
-      contact_email: "outdoorgear@example.com",
-      contact_phone: "066778899",
+      contact_person: "Piseth Nop",
+      contact_position: "Regional Sales Manager",
+      contact_email: "piseth@khmersport.com",
+      contact_phone: "053 730 289",
       address: {
-        street: "Gear St",
-        house: "654",
-        village: "Adventure Area",
-        commune: "Battambang",
+        street: "Street 3",
+        house: "54",
+        village: "Kampong Seima",
+        commune: "Svay Por",
         district: "Battambang",
         province: "Battambang",
       },
@@ -316,16 +316,16 @@ async function seed() {
       status: "Active",
     },
     {
-      company_name: "Automotive Parts Co",
+      company_name: "Premier Auto Parts Import",
       location: "Phnom Penh",
-      contact_person: "Grace Lee",
+      contact_person: "Makara Hout",
       contact_position: "Procurement Manager",
-      contact_email: "automotiveparts@example.com",
-      contact_phone: "077889900",
+      contact_email: "makara@premierauto.com.kh",
+      contact_phone: "011 889 001",
       address: {
-        street: "Auto St",
-        house: "987",
-        village: "Industrial Area",
+        street: "National Rd 5",
+        house: "201",
+        village: "Chroy Changvar",
         commune: "Chroy Changvar",
         district: "Chroy Changvar",
         province: "Phnom Penh",
@@ -334,36 +334,36 @@ async function seed() {
       status: "Active",
     },
     {
-      company_name: "Book & Media Co",
-      location: "Siem Reap",
-      contact_person: "Hannah Brown",
+      company_name: "Phnom Penh Book Centre",
+      location: "Phnom Penh",
+      contact_person: "Leakhena Srun",
       contact_position: "Sales Executive",
-      contact_email: "bookmedia@example.com",
-      contact_phone: "088990011",
+      contact_email: "leakhena@ppbookcentre.com",
+      contact_phone: "023 210 456",
       address: {
-        street: "Book St",
-        house: "123",
-        village: "Library Area",
-        commune: "Svay Dangkum",
-        district: "Siem Reap",
-        province: "Siem Reap",
+        street: "Sothearos Blvd",
+        house: "32",
+        village: "Chaktomouk",
+        commune: "Chey Chumneah",
+        district: "Doun Penh",
+        province: "Phnom Penh",
       },
       payment_term: "Net 30",
       status: "Active",
     },
     {
-      company_name: "Clothing & Accessories",
+      company_name: "Golden Thread Fashion Wholesale",
       location: "Phnom Penh",
-      contact_person: "Ian Scott",
+      contact_person: "Sopheak Tan",
       contact_position: "Sales Manager",
-      contact_email: "clothingaccessories@example.com",
-      contact_phone: "099001122",
+      contact_email: "sopheak@goldenthread.com.kh",
+      contact_phone: "016 001 234",
       address: {
-        street: "Fashion St",
-        house: "456",
-        village: "Shopping Area",
-        commune: "Toul Svay Prey",
-        district: "Chamkar Mon",
+        street: "Street 182",
+        house: "7A",
+        village: "Phsar Thmey I",
+        commune: "Phsar Thmey",
+        district: "Doun Penh",
         province: "Phnom Penh",
       },
       payment_term: "Net 30",
@@ -372,6 +372,7 @@ async function seed() {
   ]);
 
   // Seed permissions FIRST
+
   const adminPermission = await Permission.create({
     name: "Admin",
     description: "Manage everything",
@@ -522,14 +523,14 @@ async function seed() {
     email: "admin@example.com",
     password,
     role: "admin",
-    first_name: "Admin",
-    last_name: "User",
-    phone: "0123456789",
+    first_name: "Sokha",
+    last_name: "Chan",
+    phone: "012 345 678",
     address: {
-      street: "Main Street",
-      house: "123",
-      village: "Old Market Area",
-      commune: "Boeng Keng Kang",
+      street: "Norodom Blvd",
+      house: "88",
+      village: "Boeung Keng Kang I",
+      commune: "Boeung Keng Kang",
       district: "Chamkar Mon",
       province: "Phnom Penh",
     },
@@ -543,14 +544,14 @@ async function seed() {
     email: "staff@example.com",
     password,
     role: "staff",
-    first_name: "Staff",
-    last_name: "User",
-    phone: "0987654321",
+    first_name: "Sreypich",
+    last_name: "Mao",
+    phone: "096 765 432",
     address: {
-      street: "Main Street",
-      house: "123",
-      village: "Old Market Area",
-      commune: "Boeng Keng Kang",
+      street: "Street 271",
+      house: "17",
+      village: "Tuol Svay Prey I",
+      commune: "Tuol Svay Prey",
       district: "Chamkar Mon",
       province: "Phnom Penh",
     },
@@ -565,15 +566,15 @@ async function seed() {
     email: "customer@example.com",
     password: customerPassword,
     role: "customer",
-    first_name: "Customer",
-    last_name: "User",
-    phone: "011223344",
+    first_name: "Rithy",
+    last_name: "Prak",
+    phone: "011 223 445",
     address: {
-      street: "Customer Street",
-      house: "789",
-      village: "Customer Village",
-      commune: "Customer Commune",
-      district: "Customer District",
+      street: "Kampuchea Krom Blvd",
+      house: "52A",
+      village: "Phsar Daeum Kov",
+      commune: "Phsar Depou II",
+      district: "Toul Kork",
       province: "Phnom Penh",
     },
     profile: null,
@@ -588,7 +589,9 @@ async function seed() {
       name: "Laptop",
       description: "15-inch laptop",
       price: 1200,
-      stock: 0,
+      stock: 5,
+      image:
+        "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
       category_id: categories[0]._id,
       supplier_id: suppliers[0]._id,
     },
@@ -597,7 +600,9 @@ async function seed() {
       name: "Desk Chair",
       description: "Ergonomic chair",
       price: 150,
-      stock: 0,
+      stock: 5,
+      image:
+        "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=400",
       category_id: categories[2]._id,
       supplier_id: suppliers[1]._id,
     },
@@ -606,7 +611,9 @@ async function seed() {
       name: "Notebook",
       description: "A4 ruled",
       price: 2,
-      stock: 0,
+      stock: 30,
+      image:
+        "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=400",
       category_id: categories[1]._id,
       supplier_id: suppliers[1]._id,
     },
@@ -615,7 +622,9 @@ async function seed() {
       name: "Monitor",
       description: "24-inch LED monitor",
       price: 250,
-      stock: 0,
+      stock: 25,
+      image:
+        "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400",
       category_id: categories[0]._id,
       supplier_id: suppliers[0]._id,
     },
@@ -624,7 +633,9 @@ async function seed() {
       name: "Pen Set",
       description: "Set of 10 pens",
       price: 5,
-      stock: 0,
+      stock: 100,
+      image:
+        "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400",
       category_id: categories[1]._id,
       supplier_id: suppliers[1]._id,
     },
@@ -633,7 +644,9 @@ async function seed() {
       name: "Office Desk",
       description: "Wooden office desk",
       price: 300,
-      stock: 0,
+      stock: 12,
+      image:
+        "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=400",
       category_id: categories[2]._id,
       supplier_id: suppliers[3]._id,
     },
@@ -642,7 +655,9 @@ async function seed() {
       name: "Smartphone",
       description: "Latest model smartphone",
       price: 800,
-      stock: 0,
+      stock: 15,
+      image:
+        "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400",
       category_id: categories[0]._id,
       supplier_id: suppliers[4]._id,
     },
@@ -651,7 +666,9 @@ async function seed() {
       name: "Stapler",
       description: "Standard office stapler",
       price: 10,
-      stock: 0,
+      stock: 20,
+      image:
+        "https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=400",
       category_id: categories[1]._id,
       supplier_id: suppliers[5]._id,
     },
@@ -660,7 +677,9 @@ async function seed() {
       name: "Headphones",
       description: "Noise-cancelling headphones",
       price: 150,
-      stock: 0,
+      stock: 10,
+      image:
+        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
       category_id: categories[0]._id,
       supplier_id: suppliers[4]._id,
     },
@@ -669,7 +688,9 @@ async function seed() {
       name: "Whiteboard",
       description: "Magnetic whiteboard",
       price: 100,
-      stock: 0,
+      stock: 10,
+      image:
+        "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400",
       category_id: categories[2]._id,
       supplier_id: suppliers[3]._id,
     },
@@ -678,7 +699,9 @@ async function seed() {
       name: "Coffee Maker",
       description: "Automatic coffee maker",
       price: 80,
-      stock: 0,
+      stock: 3,
+      image:
+        "https://images.unsplash.com/photo-1520970014086-2208d157c9e2?w=400",
       category_id: categories[3]._id,
       supplier_id: suppliers[6]._id,
     },
@@ -687,7 +710,9 @@ async function seed() {
       name: "Water Bottle",
       description: "Insulated water bottle",
       price: 25,
-      stock: 0,
+      stock: 30,
+      image:
+        "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400",
       category_id: categories[3]._id,
       supplier_id: suppliers[6]._id,
     },
@@ -696,7 +721,8 @@ async function seed() {
       name: "Backpack",
       description: "Laptop backpack",
       price: 60,
-      stock: 0,
+      stock: 20,
+      image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -705,7 +731,9 @@ async function seed() {
       name: "Sunglasses",
       description: "Polarized sunglasses",
       price: 120,
-      stock: 0,
+      stock: 10,
+      image:
+        "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -714,7 +742,8 @@ async function seed() {
       name: "Running Shoes",
       description: "Comfortable running shoes",
       price: 90,
-      stock: 0,
+      stock: 10,
+      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -723,7 +752,9 @@ async function seed() {
       name: "Shampoo",
       description: "Hair care shampoo",
       price: 15,
-      stock: 0,
+      stock: 20,
+      image:
+        "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400",
       category_id: categories[5]._id,
       supplier_id: suppliers[6]._id,
     },
@@ -732,7 +763,9 @@ async function seed() {
       name: "Conditioner",
       description: "Hair care conditioner",
       price: 15,
-      stock: 0,
+      stock: 20,
+      image:
+        "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400",
       category_id: categories[5]._id,
       supplier_id: suppliers[6]._id,
     },
@@ -741,7 +774,9 @@ async function seed() {
       name: "T-shirt",
       description: "Cotton t-shirt",
       price: 20,
-      stock: 0,
+      stock: 20,
+      image:
+        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -750,7 +785,8 @@ async function seed() {
       name: "Jeans",
       description: "Denim jeans",
       price: 40,
-      stock: 0,
+      stock: 20,
+      image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400",
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -759,7 +795,9 @@ async function seed() {
       name: "Jacket",
       description: "Winter jacket",
       price: 100,
-      stock: 0,
+      stock: 20,
+      image:
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400",
       category_id: categories[4]._id,
       supplier_id: suppliers[7]._id,
     },
@@ -888,131 +926,137 @@ async function seed() {
   // Seed Order Requests with various statuses
   const orderRequests = [];
 
-  // 1. Pending Order (Customer)
+  // 1. Pending Order (Customer) - laptops for new office setup
   orderRequests.push(
     await OrderRequest.create({
-      quantity: 2,
+      quantity: 3,
       status: "pending",
       requested_date: new Date(),
-      notes: "Need urgently",
-      customer_remark: "Please deliver ASAP",
-      delivery_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      notes:
+        "Requesting 3 units of Dell laptops for new staff onboarding next week.",
+      customer_remark: "Please prioritize — training starts Monday.",
+      delivery_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
       requester_id: customerUser._id,
-      supplier_id: suppliers[0]._id, // Acme Corp
+      supplier_id: suppliers[0]._id, // TechVision Electronics
     }),
   );
 
-  // 2. Pending Order (Staff)
+  // 2. Pending Order (Staff) - restocking office stationery
   orderRequests.push(
     await OrderRequest.create({
-      quantity: 10,
+      quantity: 50,
       status: "pending",
       requested_date: new Date(),
-      notes: "Office supplies restocking",
+      notes:
+        "Monthly stationery restock: A4 paper reams, ballpoint pens, sticky notes, and file folders.",
       delivery_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       requester_id: staffUser._id,
-      supplier_id: suppliers[2]._id, // Office Essentials
+      supplier_id: suppliers[1]._id, // Angkor Stationery
     }),
   );
 
-  // 3. Approved Order (Ready for Delivery)
+  // 3. Approved Order (Ready for Delivery) - monitors for the design team
   const approvedOrder = await OrderRequest.create({
-    quantity: 5,
+    quantity: 6,
     status: "approved",
     requested_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    notes: "For new project",
-    delivery_date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+    notes:
+      "27-inch 4K monitors for the creative design team — 2 units per desk x3 designers.",
+    delivery_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
     requester_id: staffUser._id,
-    supplier_id: suppliers[4]._id, // Tech Gadgets
+    supplier_id: suppliers[4]._id, // SmartTech Distribution
     approved_by: adminUser._id,
     approved_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
     notified: true,
   });
   orderRequests.push(approvedOrder);
 
-  // Create associated ApproveRequest
   await ApproveRequest.create({
     order_request_id: approvedOrder._id,
     status: "approved",
-    admin_remarks: "Approved, proceed with delivery.",
+    admin_remarks:
+      "Budget approved. Coordinate delivery slot with warehouse team before noon.",
     approved_by: adminUser._id,
     approved_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
   });
 
-  // 4. Rejected Order
+  // 4. Rejected Order - personal item expense
   const rejectedOrder = await OrderRequest.create({
     quantity: 1,
     status: "rejected",
     requested_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    notes: "Personal item",
+    notes:
+      "Requesting premium noise-cancelling headphones for personal use during work hours.",
     requester_id: staffUser._id,
-    supplier_id: suppliers[6]._id,
-    rejection_reason: "Not a valid business expense",
+    supplier_id: suppliers[4]._id,
+    rejection_reason:
+      "Item is classified as personal equipment and does not qualify for company procurement.",
     notified: true,
   });
   orderRequests.push(rejectedOrder);
 
-  // Create associated ApproveRequest (Rejected)
   await ApproveRequest.create({
     order_request_id: rejectedOrder._id,
     status: "rejected",
-    rejection_reason: "Not a valid business expense",
-    admin_remarks: "Policy violation",
+    rejection_reason:
+      "Item is classified as personal equipment and does not qualify for company procurement.",
+    admin_remarks:
+      "Please submit requests for business-critical equipment only. Refer to procurement policy §3.2.",
     approved_by: adminUser._id,
     approved_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
   });
 
-  // 5. Completed Order (Delivered)
+  // 5. Completed Order - ergonomic furniture for office renovation
   const completedOrder = await OrderRequest.create({
-    quantity: 20,
+    quantity: 10,
     status: "completed",
     requested_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    notes: "Monthly stock",
+    notes:
+      "10 ergonomic desk chairs for the newly renovated open-plan office on floor 2.",
     requester_id: adminUser._id,
-    supplier_id: suppliers[1]._id,
-    approved_by: staffUser._id,
+    supplier_id: suppliers[3]._id, // Mekong Furniture
+    approved_by: adminUser._id,
     approved_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
     notified: true,
     confirmed_by: adminUser._id,
-    confirmed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    confirmed_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
   });
   orderRequests.push(completedOrder);
 
-  // Create ApproveRequest
   await ApproveRequest.create({
     order_request_id: completedOrder._id,
     status: "approved",
-    admin_remarks: "Routine restock",
-    approved_by: staffUser._id,
+    admin_remarks:
+      "Approved as part of the Q1 office renovation budget allocation.",
+    approved_by: adminUser._id,
     approved_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
   });
 
-  // Create ConfirmDelivery - Removed, merged into OrderRequest
-
-  // 6. Another Completed Order
+  // 6. Completed Order - promotional materials for Cambodia Trade Fair
   const completedOrder2 = await OrderRequest.create({
-    quantity: 50,
+    quantity: 200,
     status: "completed",
     requested_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-    notes: "Event materials",
+    notes:
+      "Branded T-shirts, pens, and notebooks for the annual Cambodia Trade Fair booth.",
     requester_id: staffUser._id,
-    supplier_id: suppliers[3]._id,
+    supplier_id: suppliers[2]._id, // Cambodian Business Hub
     approved_by: adminUser._id,
     approved_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
     notified: true,
     confirmed_by: staffUser._id,
-    confirmed_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+    confirmed_at: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
   });
   orderRequests.push(completedOrder2);
 
   await ApproveRequest.create({
     order_request_id: completedOrder2._id,
     status: "approved",
+    admin_remarks:
+      "Marketing event approved. Ensure branded items are quality-checked prior to the event.",
     approved_by: adminUser._id,
     approved_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
   });
-
-  // Create ConfirmDelivery - Removed, merged into OrderRequest
 
   // Seed OrderRequestItems
   for (const order of orderRequests) {
@@ -1077,27 +1121,170 @@ async function seed() {
     });
   }
 
-  // Seed Expenses
-  const expenseCategories = [
-    "Rent",
-    "Utilities",
-    "Salary",
-    "Inventory",
-    "Marketing",
-    "Transport",
-    "Other",
+  // Seed Expenses with realistic descriptions
+  const expenseData = [
+    {
+      description: "Monthly warehouse rent — Phnom Penh main facility",
+      amount: 3200.0,
+      category: "Rent",
+    },
+    {
+      description: "Electricity bill — EDC Invoice #2025-0612 (June)",
+      amount: 420.5,
+      category: "Utilities",
+    },
+    {
+      description:
+        "Monthly salary payout — Warehouse & logistics staff (8 employees)",
+      amount: 8500.0,
+      category: "Salary",
+    },
+    {
+      description: "Bulk restock of A4 copy paper — 50 reams @ $4.20 each",
+      amount: 210.0,
+      category: "Inventory",
+    },
+    {
+      description: "Facebook & Google Ads — June product promotion campaign",
+      amount: 650.0,
+      category: "Marketing",
+    },
+    {
+      description: "Delivery van fuel reimbursement — May routes",
+      amount: 185.0,
+      category: "Transport",
+    },
+    {
+      description: "Water & internet utility bill — Office (May)",
+      amount: 96.0,
+      category: "Utilities",
+    },
+    {
+      description: "Office cleaning service contract — Monthly fee",
+      amount: 120.0,
+      category: "Other",
+    },
+    {
+      description: "Staff overtime allowance — Inventory audit week",
+      amount: 340.0,
+      category: "Salary",
+    },
+    {
+      description: "Inkjet printer cartridges x6 — HP 664 Black & Color",
+      amount: 78.0,
+      category: "Inventory",
+    },
+    {
+      description: "Annual warehouse rent renewal — Siem Reap secondary unit",
+      amount: 18000.0,
+      category: "Rent",
+    },
+    {
+      description: "Annual fire insurance premium — Warehouse assets",
+      amount: 960.0,
+      category: "Other",
+    },
+    {
+      description: "Tarpaulin & cardboard packaging — Q2 restock batch",
+      amount: 310.0,
+      category: "Inventory",
+    },
+    {
+      description: "Road toll & transport fee — Delivery run to Siem Reap",
+      amount: 55.0,
+      category: "Transport",
+    },
+    {
+      description: "Instagram influencer campaign — New product launch",
+      amount: 1200.0,
+      category: "Marketing",
+    },
+    {
+      description: "Motodop delivery fees — Local Phnom Penh orders (June)",
+      amount: 140.0,
+      category: "Transport",
+    },
+    {
+      description: "Laptop battery replacement — Dell Latitude (IT dept)",
+      amount: 89.0,
+      category: "Other",
+    },
+    {
+      description: "Staff health insurance premium — Q2 2025",
+      amount: 2400.0,
+      category: "Salary",
+    },
+    {
+      description: "Office phone & landline subscription — June",
+      amount: 48.0,
+      category: "Utilities",
+    },
+    {
+      description: "Accounting software subscription — QuickBooks (Annual)",
+      amount: 540.0,
+      category: "Other",
+    },
+    {
+      description: "Plastic storage bins x20 for stockroom reorganization",
+      amount: 160.0,
+      category: "Inventory",
+    },
+    {
+      description: "Newspaper advertisement — Khmer Times (Sunday edition)",
+      amount: 220.0,
+      category: "Marketing",
+    },
+    {
+      description: "Generator fuel for power backup — 3-day network outage",
+      amount: 115.0,
+      category: "Utilities",
+    },
+    {
+      description: "Business registration renewal — Ministry of Commerce",
+      amount: 350.0,
+      category: "Other",
+    },
+    {
+      description: "Security guard service — Night shift, May 2025",
+      amount: 480.0,
+      category: "Salary",
+    },
+    {
+      description: "Postal & courier charges — Document shipments (June)",
+      amount: 62.0,
+      category: "Transport",
+    },
+    {
+      description: "Promotional flyer printing — 5000 units for trade fair",
+      amount: 390.0,
+      category: "Marketing",
+    },
+    {
+      description:
+        "Air conditioning maintenance & coolant refill — Office unit",
+      amount: 145.0,
+      category: "Other",
+    },
+    {
+      description: "Part-time bookkeeper fee — End of quarter reconciliation",
+      amount: 200.0,
+      category: "Salary",
+    },
+    {
+      description: "Barcode scanner replacement — Warehouse receiving desk",
+      amount: 135.0,
+      category: "Other",
+    },
   ];
-  for (let i = 0; i < 50; i++) {
-    const date = new Date(
-      Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000,
-    );
+  for (let i = 0; i < expenseData.length; i++) {
+    const daysAgo = Math.floor(i * 3) + Math.floor(Math.random() * 3);
+    const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
     await Expense.create({
-      description: `Expense for ${expenseCategories[Math.floor(Math.random() * expenseCategories.length)]} - ${Math.floor(Math.random() * 1000)}`,
-      amount: (Math.random() * 1000 + 50).toFixed(2),
-      category:
-        expenseCategories[Math.floor(Math.random() * expenseCategories.length)],
+      description: expenseData[i].description,
+      amount: expenseData[i].amount,
+      category: expenseData[i].category,
       date: date,
-      user_id: adminUser._id,
+      user_id: i % 3 === 0 ? staffUser._id : adminUser._id,
       status: "active",
       createdAt: date,
     });
@@ -1108,7 +1295,8 @@ async function seed() {
     Notification.create({
       user_id: adminUser._id,
       type: "order_request",
-      message: "New order request submitted by customer.",
+      message:
+        "Rithy Prak submitted a new purchase order request for 3x laptops from TechVision Electronics.",
       entity_type: "OrderRequest",
       entity_id: orderRequests[0]._id,
       read: false,
@@ -1116,9 +1304,28 @@ async function seed() {
     Notification.create({
       user_id: staffUser._id,
       type: "approve_request",
-      message: "Order request approved.",
+      message:
+        "Your order request for 6x monitors has been approved by Sokha Chan. Delivery expected in 2 days.",
       entity_type: "OrderRequest",
       entity_id: approvedOrder._id,
+      read: false,
+    }),
+    Notification.create({
+      user_id: staffUser._id,
+      type: "order_request",
+      message:
+        "Your stationery restock request is pending review. Expected response within 24 hours.",
+      entity_type: "OrderRequest",
+      entity_id: orderRequests[1]._id,
+      read: true,
+    }),
+    Notification.create({
+      user_id: staffUser._id,
+      type: "approve_request",
+      message:
+        "Your headphones request was rejected — personal equipment not covered by procurement policy §3.2.",
+      entity_type: "OrderRequest",
+      entity_id: rejectedOrder._id,
       read: false,
     }),
   ]);
@@ -1128,16 +1335,49 @@ async function seed() {
     ActivityLog.create({
       user_id: customerUser._id,
       action: "create_order_request",
-      details: "Customer created order request",
+      details:
+        "Rithy Prak submitted purchase order request for 3x laptops (TechVision Electronics)",
       entity_type: "OrderRequest",
       entity_id: orderRequests[0]._id,
     }),
     ActivityLog.create({
       user_id: adminUser._id,
       action: "approve_order_request",
-      details: "Admin approved order",
+      details:
+        "Sokha Chan approved order request for 6x monitors for the design team",
       entity_type: "OrderRequest",
       entity_id: approvedOrder._id,
+    }),
+    ActivityLog.create({
+      user_id: adminUser._id,
+      action: "reject_order_request",
+      details:
+        "Sokha Chan rejected headphones request from Sreypich Mao — policy §3.2 violation",
+      entity_type: "OrderRequest",
+      entity_id: rejectedOrder._id,
+    }),
+    ActivityLog.create({
+      user_id: adminUser._id,
+      action: "confirm_delivery",
+      details:
+        "Sokha Chan confirmed delivery of 10x ergonomic chairs from Mekong Furniture",
+      entity_type: "OrderRequest",
+      entity_id: completedOrder._id,
+    }),
+    ActivityLog.create({
+      user_id: staffUser._id,
+      action: "confirm_delivery",
+      details:
+        "Sreypich Mao confirmed receipt of promotional materials for Cambodia Trade Fair",
+      entity_type: "OrderRequest",
+      entity_id: completedOrder2._id,
+    }),
+    ActivityLog.create({
+      user_id: staffUser._id,
+      action: "create_sale",
+      details: "Sreypich Mao recorded a new point-of-sale transaction",
+      entity_type: "Sale",
+      entity_id: null,
     }),
   ]);
 
