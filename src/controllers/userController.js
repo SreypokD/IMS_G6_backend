@@ -361,6 +361,7 @@ exports.updateProfile = async (req, res) => {
       "phone",
       "address",
       "profile",
+      "email", // Allow email update
       "password", // Allow password update
     ];
 
@@ -370,6 +371,19 @@ exports.updateProfile = async (req, res) => {
         if (key === "password") {
           if (req.body.password && req.body.password.length >= 6) {
             updateData.password = await bcrypt.hash(req.body.password, 10);
+          }
+        } else if (key === "email") {
+          const newEmail = req.body.email;
+          if (newEmail && newEmail !== user.email) {
+            // Check if email already exists
+            const existing = await User.findOne({ where: { email: newEmail } });
+            if (existing) {
+              return res.status(409).json({
+                success: false,
+                error: "Email already exists",
+              });
+            }
+            updateData.email = newEmail;
           }
         } else if (
           key === "address" &&
