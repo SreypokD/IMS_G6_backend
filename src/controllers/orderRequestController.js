@@ -38,17 +38,17 @@ exports.getAll = async (req, res) => {
       requester_id,
       search,
       approve_status,
-      startDate,
-      endDate,
+      start_date,
+      end_date,
     } = req.query;
 
     const where = {};
     if (status) where.status = status;
     if (supplier_id) where.supplier_id = supplier_id;
     if (requester_id) where.requester_id = requester_id;
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+    if (start_date && end_date) {
+      const start = new Date(start_date);
+      const end = new Date(end_date);
       end.setHours(23, 59, 59, 999);
       where.createdAt = {
         [Op.between]: [start, end],

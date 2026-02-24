@@ -44,11 +44,11 @@ exports.getAll = async (req, res) => {
         where.product_id = "non-existent-id";
       }
     }
-    if (req.query.startDate && req.query.endDate) {
+    if (req.query.start_date && req.query.end_date) {
       where.completed_at = {
         [Op.between]: [
-          new Date(req.query.startDate),
-          new Date(req.query.endDate),
+          new Date(req.query.start_date),
+          new Date(req.query.end_date),
         ],
       };
     }
@@ -208,7 +208,7 @@ exports.summary = async (req, res) => {
       !req.query.user &&
       (!req.query.location || req.query.location === "All Locations") &&
       (!req.query.type || req.query.type === "All Transactions") &&
-      !req.query.startDate;
+      !req.query.start_date;
 
     if (isGlobalScope) {
       // Use actual inventory count from Products table
@@ -241,11 +241,11 @@ exports.summary = async (req, res) => {
     sixtyDaysAgo.setDate(today.getDate() - 60);
 
     // Helper for filtered sum
-    const getTrendSum = async (type, startDate, endDate) => {
+    const getTrendSum = async (type, start_date, end_date) => {
       const trendWhere = { ...where }; // Inherit filters
       trendWhere.type = type;
       trendWhere.completed_at = {
-        [Op.between]: [startDate, endDate],
+        [Op.between]: [start_date, end_date],
       };
       return (await Stock.sum("quantity", { where: trendWhere })) || 0;
     };

@@ -13,20 +13,20 @@ const { sequelize } = require("../models");
 exports.trends = async (req, res) => {
   try {
     const { from, to } = req.query;
-    if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
-       return res.status(403).json({ success: false, error: "Access denied" });
+    if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+      return res.status(403).json({ success: false, error: "Access denied" });
     }
-    let startDate, endDate;
+    let start_date, end_date;
 
     if (from && to) {
-      startDate = new Date(from);
-      endDate = new Date(to);
-      endDate.setHours(23, 59, 59, 999);
+      start_date = new Date(from);
+      end_date = new Date(to);
+      end_date.setHours(23, 59, 59, 999);
     } else {
       // Default to last 7 days if no range provided
-      endDate = new Date();
-      startDate = new Date();
-      startDate.setDate(endDate.getDate() - 7);
+      end_date = new Date();
+      start_date = new Date();
+      start_date.setDate(end_date.getDate() - 7);
     }
 
     const trends = await Stock.findAll({
@@ -37,7 +37,7 @@ exports.trends = async (req, res) => {
       ],
       where: {
         completed_at: {
-          [Op.between]: [startDate, endDate],
+          [Op.between]: [start_date, end_date],
         },
       },
       group: ["date", "type"],
@@ -51,8 +51,8 @@ exports.trends = async (req, res) => {
 
     // Generate date range
     for (
-      let d = new Date(startDate);
-      d <= endDate;
+      let d = new Date(start_date);
+      d <= end_date;
       d.setDate(d.getDate() + 1)
     ) {
       const dateStr = d.toISOString().split("T")[0];
@@ -77,8 +77,8 @@ exports.trends = async (req, res) => {
 };
 
 exports.inventorySummary = async (req, res) => {
-  if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
-       return res.status(403).json({ success: false, error: "Access denied" });
+  if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+    return res.status(403).json({ success: false, error: "Access denied" });
   }
   const totalSuppliers = await Supplier.count();
   const products = await Product.findAll();
@@ -91,17 +91,17 @@ exports.inventorySummary = async (req, res) => {
 exports.orderStats = async (req, res) => {
   const { from, to } = req.query;
   const where = {};
-  
+
   // Filter by user if not admin/staff
-  if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
-      where.requester_id = req.user._id;
+  if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+    where.requester_id = req.user._id;
   }
 
   if (from && to) {
-    const startDate = new Date(from);
-    const endDate = new Date(to);
-    endDate.setHours(23, 59, 59, 999);
-    where.createdAt = { [Op.between]: [startDate, endDate] };
+    const start_date = new Date(from);
+    const end_date = new Date(to);
+    end_date.setHours(23, 59, 59, 999);
+    where.createdAt = { [Op.between]: [start_date, end_date] };
   }
   const totalOrders = await OrderRequest.count({ where });
   const pending = await OrderRequest.count({
@@ -122,17 +122,17 @@ exports.activityLogs = async (req, res) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
-    const { startDate, endDate } = req.query;
+    const { start_date, end_date } = req.query;
 
     const where = {};
     // Filter by user if not admin/staff
-    if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
-        where.user_id = req.user._id;
+    if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+      where.user_id = req.user._id;
     }
 
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+    if (start_date && end_date) {
+      const start = new Date(start_date);
+      const end = new Date(end_date);
       end.setHours(23, 59, 59, 999);
       where.createdAt = { [Op.between]: [start, end] };
     }
@@ -161,16 +161,16 @@ exports.activityLogs = async (req, res) => {
 };
 exports.financialSummary = async (req, res) => {
   try {
-    if (req.user && req.user.role !== 'admin' && req.user.role !== 'staff') {
-       return res.status(403).json({ success: false, error: "Access denied" });
+    if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+      return res.status(403).json({ success: false, error: "Access denied" });
     }
-    const { startDate, endDate } = req.query;
+    const { start_date, end_date } = req.query;
     const dateFilter = {};
     const expenseDateFilter = {};
 
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+    if (start_date && end_date) {
+      const start = new Date(start_date);
+      const end = new Date(end_date);
       end.setHours(23, 59, 59, 999);
 
       dateFilter.completed_at = { [Op.between]: [start, end] };

@@ -16,14 +16,14 @@ exports.getAll = async (req, res) => {
       page = 1;
     }
     const offset = (page - 1) * limit;
-    const { startDate, endDate, customer, status, search } = req.query;
+    const { start_date, end_date, customer, status, search } = req.query;
     const where = {};
 
     if (status && status !== "All Status") where.status = status;
     if (customer && customer !== "All Customers") where.customer_id = customer;
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+    if (start_date && end_date) {
+      const start = new Date(start_date);
+      const end = new Date(end_date);
       end.setHours(23, 59, 59, 999);
       where.completed_at = {
         [Op.between]: [start, end],
@@ -75,11 +75,11 @@ exports.summary = async (req, res) => {
     sixtyDaysAgo.setDate(today.getDate() - 60);
 
     // Helper for filtered stats
-    const getStats = async (startDate, endDate) => {
+    const getStats = async (start_date, end_date) => {
       const where = {
         status: "Completed",
         completed_at: {
-          [Op.between]: [startDate, endDate],
+          [Op.between]: [start_date, end_date],
         },
       };
 

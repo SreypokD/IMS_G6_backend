@@ -12,12 +12,12 @@ exports.getAll = async (req, res) => {
       page = 1;
     }
     const offset = (page - 1) * limit;
-    const { startDate, endDate, category, search } = req.query;
+    const { start_date, end_date, category, search } = req.query;
     const where = {};
     if (category && category !== "All Categories") where.category = category;
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+    if (start_date && end_date) {
+      const start = new Date(start_date);
+      const end = new Date(end_date);
       end.setHours(23, 59, 59, 999);
       where.date = {
         [Op.between]: [start, end],
