@@ -523,8 +523,8 @@ async function seed() {
     email: "admin@example.com",
     password,
     role: "admin",
-    first_name: "Sokha",
-    last_name: "Chan",
+    first_name: "Lyden",
+    last_name: "CHAI",
     phone: "012 345 678",
     address: {
       street: "Norodom Blvd",
@@ -534,7 +534,7 @@ async function seed() {
       district: "Chamkar Mon",
       province: "Phnom Penh",
     },
-    profile: null,
+    profile: "https://avatars.githubusercontent.com/u/74000032?v=4",
     permission_id: adminPermission._id,
     user_type: "internal",
   });
@@ -544,8 +544,8 @@ async function seed() {
     email: "staff@example.com",
     password,
     role: "staff",
-    first_name: "Sreypich",
-    last_name: "Mao",
+    first_name: "Sreypok",
+    last_name: "DOEM",
     phone: "096 765 432",
     address: {
       street: "Street 271",
@@ -555,7 +555,7 @@ async function seed() {
       district: "Chamkar Mon",
       province: "Phnom Penh",
     },
-    profile: null,
+    profile: "https://avatars.githubusercontent.com/u/122275653?v=4",
     permission_id: staffPermission._id,
     user_type: "internal",
   });
