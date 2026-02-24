@@ -18,8 +18,6 @@ router.get("/", authenticateToken, (req, res) => {
     delivery_status,
   });
 });
-router.patch("/:id", authenticateToken, orderRequestController.updateConfirmDelivery);
 router.post("/:id/confirm", authenticateToken, orderRequestController.confirmDelivery);
-router.delete("/:id", authenticateToken, orderRequestController.removeConfirmDelivery);
 
 module.exports = router;

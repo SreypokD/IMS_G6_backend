@@ -1,17 +1,18 @@
-const ActivityLog = require("../models/ActivityLog");
+const { validationResult } = require("express-validator");
+const { Op, Sequelize } = require("sequelize");
+const { sendMail } = require("../utils/mail.util");
+
+const OrderRequestItem = require("../models/OrderRequestItem");
+const ApproveRequest = require("../models/ApproveRequest");
 const Notification = require("../models/Notification");
 const OrderRequest = require("../models/OrderRequest");
-const Sale = require("../models/Sale");
-const { SaleItem } = require("../models/associations"); 
-const Product = require("../models/Product");
-const User = require("../models/User");
-const ApproveRequest = require("../models/ApproveRequest");
-const Stock = require("../models/Stock");
-const OrderRequestItem = require("../models/OrderRequestItem");
+const SaleItem = require("../models/associations");
+const ActivityLog = require("../models/ActivityLog");
 const Permission = require("../models/Permission");
-const { validationResult } = require("express-validator");
-const { sendMail } = require("../utils/mail.util");
-const { Op, Sequelize } = require("sequelize");
+const Product = require("../models/Product");
+const Stock = require("../models/Stock");
+const Sale = require("../models/Sale");
+const User = require("../models/User");
 
 exports.getAll = async (req, res) => {
   try {
@@ -37,7 +38,6 @@ exports.getAll = async (req, res) => {
       requester_id,
       search,
       approve_status,
-      delivery_status,
       startDate,
       endDate,
     } = req.query;
@@ -252,7 +252,7 @@ exports.updateStatus = async (req, res) => {
         const itemTotal =
           item.subtotal ||
           item.quantity * item.unit_price ||
-          (item.quantity * (await Product.findByPk(item.product_id)).price) ||
+          item.quantity * (await Product.findByPk(item.product_id)).price ||
           0;
         totalAmount += parseFloat(itemTotal);
       }
@@ -280,7 +280,9 @@ exports.updateStatus = async (req, res) => {
             product_id: product._id,
             quantity: item.quantity,
             price: item.unit_price || product.price,
-            subtotal: item.subtotal || item.quantity * (item.unit_price || product.price),
+            subtotal:
+              item.subtotal ||
+              item.quantity * (item.unit_price || product.price),
           });
         }
       }
@@ -563,7 +565,7 @@ exports.updateStatus = async (req, res) => {
       for (const item of orderItems) {
         const product = await Product.findByPk(item.product_id);
         if (!product) continue;
-        
+
         // Deduct stock and release reserved
         product.stock = Math.max(0, product.stock - item.quantity);
         product.reserved_stock = Math.max(

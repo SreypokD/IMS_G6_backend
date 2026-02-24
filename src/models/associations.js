@@ -1,18 +1,18 @@
 const User = require("./User");
+const Sale = require("./Sale");
+const Stock = require("./Stock");
+const Expense = require("./Expense");
 const Product = require("./Product");
 const Category = require("./Category");
 const Supplier = require("./Supplier");
-const OrderRequest = require("./OrderRequest");
-const OrderRequestItem = require("./OrderRequestItem");
+const SaleItem = require("./SaleItem");
 const Permission = require("./Permission");
-const Sale = require("./Sale");
 const ActivityLog = require("./ActivityLog");
+const OrderRequest = require("./OrderRequest");
 const Notification = require("./Notification");
 const ApproveRequest = require("./ApproveRequest");
 const ConfirmDelivery = require("./ConfirmDelivery");
-const Stock = require("./Stock");
-const SaleItem = require("./SaleItem");
-const Expense = require("./Expense");
+const OrderRequestItem = require("./OrderRequestItem");
 
 // ================= Associations =================
 
@@ -197,19 +197,18 @@ User.hasMany(Expense, { foreignKey: "user_id", as: "expenses" });
 
 module.exports = {
   User,
+  Sale,
+  Stock,
+  Expense,
   Product,
   Category,
   Supplier,
-  OrderRequest,
-  OrderRequestItem,
+  SaleItem,
   Permission,
-  Sale,
   ActivityLog,
+  OrderRequest,
   Notification,
+  OrderRequestItem,
   ApproveRequest,
   ConfirmDelivery,
-  Stock,
-  Expense,
-  Permission,
-  SaleItem,
 };
