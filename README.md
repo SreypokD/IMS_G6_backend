@@ -165,7 +165,7 @@ Authorization: Bearer <access_token>
 
 ## Frontend
 
-See [IMS-G6-frontend]("https://github.com/SreypokD/IMS_G6_frontend") for frontend setup and usage.
+See [IMS-G6-frontend](https://github.com/SreypokD/IMS_G6_frontend) for frontend setup and usage.
 
 ## Notes
 
