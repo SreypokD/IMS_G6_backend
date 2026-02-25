@@ -427,16 +427,16 @@ async function seed() {
       "view_activity_log",
       "view_report",
       "view_inventory_summary",
-      // Users
-      "view_user",
-      "create_user",
-      "update_user",
-      "delete_user",
       // Permissions
       "view_permission",
       "create_permission",
       "update_permission",
       "delete_permission",
+      // Users
+      "view_user",
+      "create_user",
+      "update_user",
+      "delete_user",
     ],
   });
 
