@@ -580,9 +580,10 @@ exports.updateStatus = async (req, res) => {
           type: "out",
           quantity: item.quantity,
           balance: product.stock,
-          location: order.location || null,
+          reason: "Sale",
+          location: order.location || "Main Warehouse",
           completed_at: new Date(),
-          note: `Deducted for order completion (#${order._id})`,
+          notes: `Deducted for order completion (#${order._id})`,
         });
 
         // Log activity for each item
@@ -786,9 +787,10 @@ exports.confirmDelivery = async (req, res) => {
           type: "out",
           quantity: item.quantity,
           balance: product.stock,
-          location: order.location || null,
+          reason: "Sale",
+          location: order.location || "Main Warehouse",
           completed_at: new Date(),
-          note: `Deducted for delivery confirmation (#${order._id})`,
+          notes: `Deducted for delivery confirmation (#${order._id})`,
         });
       }
     }
