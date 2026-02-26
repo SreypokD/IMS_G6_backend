@@ -56,24 +56,24 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     // Always assign 'customer' role and customer permissions
     // Find or create the 'customer' permission
-    let customerPermission = await Permission.findOne({
-      where: { name: "customer" },
-    });
-    if (!customerPermission) {
-      customerPermission = await Permission.create({
-        name: "customer",
-        description: "Customer role permissions",
-        permissions: [
-          "view_dashboard",
-          "view_product",
-          "view_category",
-          "view_supplier",
-          "view_order_request",
-          "create_order_request",
-          "view_order_history",
-        ],
-      });
-    }
+    // let customerPermission = await Permission.findOne({
+    //   where: { name: "customer" },
+    // });
+    // if (!customerPermission) {
+    //   customerPermission = await Permission.create({
+    //     name: "customer",
+    //     description: "Customer role permissions",
+    //     permissions: [
+    //       "view_dashboard",
+    //       "view_product",
+    //       "view_category",
+    //       "view_supplier",
+    //       "view_order_request",
+    //       "create_order_request",
+    //       "view_order_history",
+    //     ],
+    //   });
+    // }
 
     const user = await User.create({
       first_name,
@@ -82,8 +82,8 @@ exports.register = async (req, res) => {
       phone,
       address: address && typeof address === "object" ? address : null,
       password: hashedPassword,
-      role: "customer",
-      permission_id: customerPermission._id,
+      role: null,
+      permission_id: null,
       status: "pending", // Default to pending for approval
       user_type: "external",
       company_name,

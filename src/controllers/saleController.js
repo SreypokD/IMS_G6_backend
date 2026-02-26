@@ -1,6 +1,6 @@
 const { sequelize } = require("../models");
 const Sale = require("../models/Sale");
-const SaleItem = require("../models/SaleItem");
+const { SaleItem } = require("../models/associations");
 const Product = require("../models/Product");
 const Stock = require("../models/Stock");
 const User = require("../models/User");

@@ -6,7 +6,7 @@ const ActivityLog = require("../models/ActivityLog");
 const OrderRequest = require("../models/OrderRequest");
 const Supplier = require("../models/Supplier");
 const Sale = require("../models/Sale");
-const SaleItem = require("../models/SaleItem");
+const { SaleItem } = require("../models/associations");
 const Expense = require("../models/Expense");
 const { sequelize } = require("../models");
 

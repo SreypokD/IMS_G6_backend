@@ -107,19 +107,26 @@ exports.create = async (req, res) => {
     }
     const product = await Product.create(req.body);
 
-    // If initial stock is provided, create a stock transaction
+    // Always create a stock entry for the new product (quantity 0 if not provided)
+    let initialStock = 0;
     if (req.body.stock && Number(req.body.stock) > 0) {
+      initialStock = Number(req.body.stock);
+    }
+
+    try {
       await Stock.create({
         product_id: product._id,
-        user_id: req.user._id,
-        type: "in",
-        quantity: Number(req.body.stock),
-        balance: Number(req.body.stock),
-        reason: "Other",
-        notes: "Initial Stock",
+        user_id: req.user?._id || null,
+        type: initialStock > 0 ? "in" : "in",
+        quantity: initialStock,
+        balance: initialStock,
+        reason: initialStock > 0 ? "Other" : "Auto-create on product add",
+        notes: initialStock > 0 ? "Initial Stock" : "Auto-created when product added",
         location: "Main Warehouse",
         completed_at: new Date(),
       });
+    } catch (stockErr) {
+      console.error("Failed to create stock entry for new product:", stockErr);
     }
 
     res.status(201).json({ success: true, data: product });
