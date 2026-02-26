@@ -14,7 +14,7 @@ exports.trends = async (req, res) => {
   try {
     const { from, to } = req.query;
     if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
-      return res.status(403).json({ success: false, error: "Access denied" });
+      return res.json({ success: true, data: [] });
     }
     let start_date, end_date;
 
@@ -78,7 +78,7 @@ exports.trends = async (req, res) => {
 
 exports.inventorySummary = async (req, res) => {
   if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
-    return res.status(403).json({ success: false, error: "Access denied" });
+    return res.json({ totalProducts: 0, totalQuantity: 0, lowStock: 0, totalSuppliers: 0 });
   }
   const totalSuppliers = await Supplier.count();
   const products = await Product.findAll();
@@ -162,7 +162,16 @@ exports.activityLogs = async (req, res) => {
 exports.financialSummary = async (req, res) => {
   try {
     if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
-      return res.status(403).json({ success: false, error: "Access denied" });
+      return res.json({
+        success: true,
+        data: {
+          revenue: 0,
+          cogs: 0,
+          grossProfit: 0,
+          expenses: 0,
+          netProfit: 0,
+        },
+      });
     }
     const { start_date, end_date } = req.query;
     const dateFilter = {};

@@ -240,9 +240,9 @@ exports.updateStatus = async (req, res) => {
         }
         const availableStock = product.stock - product.reserved_stock;
         if (availableStock < item.quantity) {
-          return res
-            .status(400)
-            .json({ error: `Insufficient stock for product ${product.name}` });
+          return res.status(400).json({
+            error: `Insufficient available stock for product: ${product.name} (Reserved limit reached: ${product.reserved_stock})`,
+          });
         }
       }
 
@@ -448,6 +448,16 @@ exports.updateStatus = async (req, res) => {
           }
         }
       }
+
+      // Find the associated pending Sale and cancel it to avoid ghost sales
+      const sale = await Sale.findOne({
+        where: { order_request_id: order._id },
+      });
+      if (sale) {
+        sale.status = "cancelled";
+        await sale.save();
+      }
+
       order.status = "rejected";
       order.rejection_reason = rejection_reason || "";
       order.notified = false;

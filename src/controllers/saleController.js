@@ -223,8 +223,11 @@ exports.create = async (req, res) => {
       if (!product) {
         throw new Error(`Product not found: ${productId}`);
       }
-      if (product.stock < quantity) {
-        throw new Error(`Insufficient stock for product: ${product.name}`);
+      const availableStock = product.stock - product.reserved_stock;
+      if (availableStock < quantity) {
+        throw new Error(
+          `Insufficient available stock for product: ${product.name} (Reserved: ${product.reserved_stock})`,
+        );
       }
 
       const newStock = product.stock - quantity;
@@ -348,8 +351,12 @@ exports.update = async (req, res) => {
 
         const product = await Product.findByPk(productId, { transaction: t });
         if (!product) throw new Error(`Product not found: ${productId}`);
-        if (product.stock < quantity)
-          throw new Error(`Insufficient stock for product: ${product.name}`);
+        const availableStock = product.stock - product.reserved_stock;
+        if (availableStock < quantity) {
+          throw new Error(
+            `Insufficient available stock for product: ${product.name} (Reserved: ${product.reserved_stock})`,
+          );
+        }
 
         const newStock = product.stock - quantity;
         await product.update({ stock: newStock }, { transaction: t });

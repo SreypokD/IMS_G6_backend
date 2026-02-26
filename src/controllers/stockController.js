@@ -125,9 +125,12 @@ exports.create = async (req, res) => {
 
       newStock += addedQty;
     } else {
-      if (product.stock < quantity) {
+      const availableStock = product.stock - product.reserved_stock;
+      if (availableStock < quantity) {
         await transaction.rollback();
-        return res.status(400).json({ error: "Insufficient stock" });
+        return res.status(400).json({
+          error: `Insufficient available stock (Reserved limit reached: ${product.reserved_stock})`,
+        });
       }
       newStock -= Number(quantity);
     }
@@ -372,11 +375,13 @@ exports.update = async (req, res) => {
         newProduct.stock += targetQuantity;
       } else {
         // Check stock
-        if (newProduct.stock < targetQuantity) {
+        const availableNewProductStock = newProduct.stock - newProduct.reserved_stock;
+        if (availableNewProductStock < targetQuantity) {
           await t.rollback();
-          return res
-            .status(400)
-            .json({ success: false, error: "Not enough stock" });
+          return res.status(400).json({
+            success: false,
+            error: `Not enough available stock (Reserved limit reached: ${newProduct.reserved_stock})`,
+          });
         }
         newProduct.stock -= targetQuantity;
       }
@@ -387,11 +392,13 @@ exports.update = async (req, res) => {
       if (targetType === "in") {
         product.stock += targetQuantity;
       } else {
-        if (product.stock < targetQuantity) {
+        const availableStock = product.stock - product.reserved_stock;
+        if (availableStock < targetQuantity) {
           await t.rollback();
-          return res
-            .status(400)
-            .json({ success: false, error: "Not enough stock" });
+          return res.status(400).json({
+            success: false,
+            error: `Not enough available stock (Reserved limit reached: ${product.reserved_stock})`,
+          });
         }
         product.stock -= targetQuantity;
       }
