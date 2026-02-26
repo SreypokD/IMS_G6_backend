@@ -45,11 +45,12 @@ exports.getAll = async (req, res) => {
       }
     }
     if (req.query.start_date && req.query.end_date) {
+      const startDate = new Date(req.query.start_date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(req.query.end_date);
+      endDate.setHours(23, 59, 59, 999);
       where.completed_at = {
-        [Op.between]: [
-          new Date(req.query.start_date),
-          new Date(req.query.end_date),
-        ],
+        [Op.between]: [startDate, endDate],
       };
     }
     const totalItems = await Stock.count({ where });
@@ -193,6 +194,15 @@ exports.summary = async (req, res) => {
       } else {
         where.product_id = "non-existent-id";
       }
+    }
+    if (req.query.start_date && req.query.end_date) {
+      const startDate = new Date(req.query.start_date);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(req.query.end_date);
+      endDate.setHours(23, 59, 59, 999);
+      where.completed_at = {
+        [Op.between]: [startDate, endDate],
+      };
     }
 
     // Total stock in (filtered)

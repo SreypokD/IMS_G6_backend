@@ -120,8 +120,11 @@ exports.create = async (req, res) => {
         type: initialStock > 0 ? "in" : "in",
         quantity: initialStock,
         balance: initialStock,
-        reason: initialStock > 0 ? "Other" : "Auto-create on product add",
-        notes: initialStock > 0 ? "Initial Stock" : "Auto-created when product added",
+        reason: "Other",
+        notes:
+          initialStock > 0
+            ? "Initial Stock"
+            : "Auto-created when product added",
         location: "Main Warehouse",
         completed_at: new Date(),
       });
