@@ -2,17 +2,19 @@ const { validationResult } = require("express-validator");
 const { Op, Sequelize } = require("sequelize");
 const { sendMail } = require("../utils/mail.util");
 
-const OrderRequestItem = require("../models/OrderRequestItem");
-const ApproveRequest = require("../models/ApproveRequest");
-const Notification = require("../models/Notification");
-const OrderRequest = require("../models/OrderRequest");
-const { SaleItem } = require("../models/associations");
-const ActivityLog = require("../models/ActivityLog");
-const Permission = require("../models/Permission");
-const Product = require("../models/Product");
-const Stock = require("../models/Stock");
-const Sale = require("../models/Sale");
-const User = require("../models/User");
+const {
+  OrderRequestItem,
+  ApproveRequest,
+  Notification,
+  OrderRequest,
+  SaleItem,
+  ActivityLog,
+  Permission,
+  Product,
+  Stock,
+  Sale,
+  User,
+} = require("../models/associations");
 
 exports.getAll = async (req, res) => {
   try {
@@ -98,7 +100,8 @@ exports.getAll = async (req, res) => {
         : { model: ApproveRequest, as: "approve_request" },
     ];
     // Only admin/staff see all, others see only their own
-    if (!req.user || (req.user.role !== "admin" && req.user.role !== "staff")) {
+    const userRole = req.user?.role?.toLowerCase();
+    if (!req.user || (userRole !== "admin" && userRole !== "staff")) {
       where.requester_id = req.user?._id;
     }
     // For count, don't use nested where (Sequelize limitation), so count all matching main where
@@ -973,7 +976,8 @@ exports.getPendingOrderRequestCount = async (req, res) => {
     const where = {
       status: { [Op.in]: ["pending"] },
     };
-    if (!req.user || (req.user.role !== "admin" && req.user.role !== "staff")) {
+    const userRole = req.user?.role?.toLowerCase();
+    if (!req.user || (userRole !== "admin" && userRole !== "staff")) {
       where.requester_id = req.user?._id;
     }
     const count = await OrderRequest.count({ where });

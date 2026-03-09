@@ -1,19 +1,22 @@
 const { Op } = require("sequelize");
-const User = require("../models/User");
-const Product = require("../models/Product");
-const Stock = require("../models/Stock");
-const ActivityLog = require("../models/ActivityLog");
-const OrderRequest = require("../models/OrderRequest");
-const Supplier = require("../models/Supplier");
-const Sale = require("../models/Sale");
-const { SaleItem } = require("../models/associations");
-const Expense = require("../models/Expense");
+const {
+  User,
+  Product,
+  Stock,
+  ActivityLog,
+  OrderRequest,
+  Supplier,
+  Sale,
+  SaleItem,
+  Expense,
+} = require("../models/associations");
 const { sequelize } = require("../models");
 
 exports.trends = async (req, res) => {
   try {
     const { from, to } = req.query;
-    if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+    const userRole = req.user?.role?.toLowerCase();
+    if (req.user && userRole !== "admin" && userRole !== "staff") {
       return res.json({ success: true, data: [] });
     }
     let start_date, end_date;
@@ -77,8 +80,14 @@ exports.trends = async (req, res) => {
 };
 
 exports.inventorySummary = async (req, res) => {
-  if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
-    return res.json({ totalProducts: 0, totalQuantity: 0, lowStock: 0, totalSuppliers: 0 });
+  const userRole = req.user?.role?.toLowerCase();
+  if (req.user && userRole !== "admin" && userRole !== "staff") {
+    return res.json({
+      totalProducts: 0,
+      totalQuantity: 0,
+      lowStock: 0,
+      totalSuppliers: 0,
+    });
   }
   const totalSuppliers = await Supplier.count();
   const products = await Product.findAll();
@@ -93,7 +102,8 @@ exports.orderStats = async (req, res) => {
   const where = {};
 
   // Filter by user if not admin/staff
-  if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+  const userRole = req.user?.role?.toLowerCase();
+  if (req.user && userRole !== "admin" && userRole !== "staff") {
     where.requester_id = req.user._id;
   }
 
@@ -126,7 +136,8 @@ exports.activityLogs = async (req, res) => {
 
     const where = {};
     // Filter by user if not admin/staff
-    if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+    const userRole = req.user?.role?.toLowerCase();
+    if (req.user && userRole !== "admin" && userRole !== "staff") {
       where.user_id = req.user._id;
     }
 
@@ -161,7 +172,8 @@ exports.activityLogs = async (req, res) => {
 };
 exports.financialSummary = async (req, res) => {
   try {
-    if (req.user && req.user.role !== "admin" && req.user.role !== "staff") {
+    const userRole = req.user?.role?.toLowerCase();
+    if (req.user && userRole !== "admin" && userRole !== "staff") {
       return res.json({
         success: true,
         data: {
