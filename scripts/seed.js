@@ -1,4 +1,4 @@
-require("dotenv").config({ path: "../environments/.env" });
+require("dotenv").config({ path: "../.env" });
 const bcrypt = require("bcryptjs");
 const { sequelize } = require("../src/models");
 const {
@@ -516,6 +516,51 @@ async function seed() {
     ],
   });
 
+  const managerPermission = await Permission.create({
+    name: "Manager",
+    description: "Broad management access",
+    permissions: [
+      "view_dashboard",
+      "view_category", "create_category", "update_category",
+      "view_product", "create_product", "update_product",
+      "view_supplier", "create_supplier", "update_supplier",
+      "view_stock", "create_stock", "update_stock",
+      "view_order_request", "create_order_request", "update_order_request",
+      "view_approve_request", "update_approve_request",
+      "view_confirm_delivery", "update_confirm_delivery",
+      "view_sale", "create_sale", "update_sale",
+      "view_expense", "create_expense", "update_expense",
+      "view_order_history",
+      "view_report", "view_inventory_summary", "view_order_stats", "view_activity_log",
+    ],
+  });
+
+  const stockkeeperPermission = await Permission.create({
+    name: "Stockkeeper",
+    description: "Inventory and stock management",
+    permissions: [
+      "view_dashboard",
+      "view_category",
+      "view_product",
+      "view_supplier",
+      "view_stock", "create_stock", "update_stock",
+      "view_order_request",
+      "view_confirm_delivery", "update_confirm_delivery",
+      "view_inventory_summary",
+    ],
+  });
+
+  const financePermission = await Permission.create({
+    name: "Finance",
+    description: "Sales, expenses and financial reports",
+    permissions: [
+      "view_dashboard",
+      "view_sale", "create_sale", "update_sale",
+      "view_expense", "create_expense", "update_expense",
+      "view_report", "view_order_stats",
+    ],
+  });
+
   // Now seed users
   const password = await bcrypt.hash("admin123", 10);
   const adminUser = await User.create({
@@ -580,6 +625,69 @@ async function seed() {
     profile: null,
     permission_id: customerPermission._id,
     user_type: "external",
+  });
+
+  const managerUser = await User.create({
+    _id: "5f8d04f3b54764421b7156c3",
+    email: "manager@example.com",
+    password,
+    role: "manager",
+    first_name: "Sopheap",
+    last_name: "SOK",
+    phone: "015 998 776",
+    address: {
+      street: "Veng Sreng Blvd",
+      house: "102",
+      village: "Choam Chao I",
+      commune: "Choam Chao",
+      district: "Pou Senchey",
+      province: "Phnom Penh",
+    },
+    profile: null,
+    permission_id: managerPermission._id,
+    user_type: "internal",
+  });
+
+  const stockkeeperUser = await User.create({
+    _id: "5f8d04f3b54764421b7156c4",
+    email: "stockkeeper@example.com",
+    password,
+    role: "stockkeeper",
+    first_name: "Piseth",
+    last_name: "MEAS",
+    phone: "088 112 233",
+    address: {
+      street: "Russian Blvd",
+      house: "45",
+      village: "Phsar Daeum Kor",
+      commune: "Phsar Depou III",
+      district: "Toul Kork",
+      province: "Phnom Penh",
+    },
+    profile: null,
+    permission_id: stockkeeperPermission._id,
+    user_type: "internal",
+  });
+
+  const financeUser = await User.create({
+    _id: "5f8d04f3b54764421b7156c5",
+    email: "finance@example.com",
+    password,
+    role: "finance",
+    first_name: "Vanna",
+    last_name: "CHENG",
+    phone: "012 990 088",
+    address: {
+      street: "Charles de Gaulle Blvd",
+      house: "234",
+      village: "Veal Vong",
+      commune: "Veal Vong",
+      district: "7 Makara",
+      province: "Phnom Penh",
+    },
+    profile: null,
+    permission_id: financePermission._id,
+    user_type: "internal",
   });
 
   // seed products

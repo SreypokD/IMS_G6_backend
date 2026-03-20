@@ -45,7 +45,17 @@ exports.getAll = async (req, res) => {
     } = req.query;
 
     const where = {};
-    if (status) where.status = status;
+    if (status) {
+      if (Array.isArray(status)) {
+        where.status = { [Op.in]: status.map((s) => s.toLowerCase()) };
+      } else if (typeof status === "string" && status.includes(",")) {
+        where.status = {
+          [Op.in]: status.split(",").map((s) => s.trim().toLowerCase()),
+        };
+      } else {
+        where.status = status.toLowerCase();
+      }
+    }
     if (supplier_id) where.supplier_id = supplier_id;
     if (requester_id) where.requester_id = requester_id;
     if (start_date && end_date) {
