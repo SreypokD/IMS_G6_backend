@@ -142,7 +142,7 @@ exports.create = async (req, res) => {
     const stock = await Stock.create(
       {
         product_id,
-        user_id: user_id || req.user.id,
+        user_id: user_id || req.user._id,
         type,
         quantity,
         balance: newStock,

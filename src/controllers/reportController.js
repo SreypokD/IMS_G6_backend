@@ -80,21 +80,26 @@ exports.trends = async (req, res) => {
 };
 
 exports.inventorySummary = async (req, res) => {
-  const userRole = req.user?.role?.toLowerCase();
-  if (req.user && userRole !== "admin" && userRole !== "staff") {
-    return res.json({
-      totalProducts: 0,
-      totalQuantity: 0,
-      lowStock: 0,
-      totalSuppliers: 0,
-    });
+  try {
+    const userRole = req.user?.role?.toLowerCase();
+    const allowedRoles = ["admin", "staff", "manager", "stockkeeper"];
+    if (req.user && !allowedRoles.includes(userRole)) {
+      return res.json({
+        totalProducts: 0,
+        totalQuantity: 0,
+        lowStock: 0,
+        totalSuppliers: 0,
+      });
+    }
+    const totalSuppliers = await Supplier.count();
+    const products = await Product.findAll();
+    const totalProducts = products.length;
+    const totalQuantity = products.reduce((sum, p) => sum + p.stock, 0);
+    const lowStock = products.filter((p) => p.stock <= 10).length;
+    res.json({ totalProducts, totalQuantity, lowStock, totalSuppliers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-  const totalSuppliers = await Supplier.count();
-  const products = await Product.findAll();
-  const totalProducts = products.length;
-  const totalQuantity = products.reduce((sum, p) => sum + p.stock, 0);
-  const lowStock = products.filter((p) => p.stock <= 10).length;
-  res.json({ totalProducts, totalQuantity, lowStock, totalSuppliers });
 };
 
 exports.orderStats = async (req, res) => {

@@ -109,9 +109,10 @@ exports.getAll = async (req, res) => {
           }
         : { model: ApproveRequest, as: "approve_request" },
     ];
-    // Only admin/staff see all, others see only their own
+    // Only admin/staff/manager/stockkeeper see all, others see only their own
     const userRole = req.user?.role?.toLowerCase();
-    if (!req.user || (userRole !== "admin" && userRole !== "staff")) {
+    const canSeeAll = ["admin", "staff", "manager", "stockkeeper"];
+    if (!req.user || !canSeeAll.includes(userRole)) {
       where.requester_id = req.user?._id;
     }
     // For count, don't use nested where (Sequelize limitation), so count all matching main where
@@ -445,11 +446,12 @@ exports.updateStatus = async (req, res) => {
       return res.json({ success: true, data: populatedOrder });
     } else if (status === "rejected") {
       if (admin_remarks) order.admin_remarks = admin_remarks;
+      // Always fetch order items (needed for email and stock release)
+      const orderItems = await OrderRequestItem.findAll({
+        where: { order_request_id: order._id },
+      });
       // Release reserved stock for all items if previously approved
       if (order.status === "approved") {
-        const orderItems = await OrderRequestItem.findAll({
-          where: { order_request_id: order._id },
-        });
         for (const item of orderItems) {
           const product = await Product.findByPk(item.product_id);
           if (product) {
@@ -982,12 +984,13 @@ exports.update = async (req, res) => {
 // Get count of order requests needing approval (pending or rejected)
 exports.getPendingOrderRequestCount = async (req, res) => {
   try {
-    // Only admin/staff see all, others see only their own
+    // Only admin/staff/manager/stockkeeper see all, others see only their own
     const where = {
       status: { [Op.in]: ["pending"] },
     };
     const userRole = req.user?.role?.toLowerCase();
-    if (!req.user || (userRole !== "admin" && userRole !== "staff")) {
+    const canSeeAll = ["admin", "staff", "manager", "stockkeeper"];
+    if (!req.user || !canSeeAll.includes(userRole)) {
       where.requester_id = req.user?._id;
     }
     const count = await OrderRequest.count({ where });
