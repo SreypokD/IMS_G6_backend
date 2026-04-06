@@ -16,7 +16,14 @@ exports.trends = async (req, res) => {
   try {
     const { from, to } = req.query;
     const userRole = req.user?.role?.toLowerCase();
-    if (req.user && userRole !== "admin" && userRole !== "staff") {
+    const permissions = req.user?.permission?.permissions || [];
+
+    if (
+      req.user &&
+      userRole !== "admin" &&
+      userRole !== "staff" &&
+      !permissions.includes("view_report")
+    ) {
       return res.json({ success: true, data: [] });
     }
     let start_date, end_date;
@@ -82,8 +89,15 @@ exports.trends = async (req, res) => {
 exports.inventorySummary = async (req, res) => {
   try {
     const userRole = req.user?.role?.toLowerCase();
-    const allowedRoles = ["admin", "staff", "manager", "stockkeeper"];
-    if (req.user && !allowedRoles.includes(userRole)) {
+    const permissions = req.user?.permission?.permissions || [];
+    const allowedRoles = ["admin", "staff", "manager", "stockkeeper", "finance"];
+
+    if (
+      req.user &&
+      !allowedRoles.includes(userRole) &&
+      !permissions.includes("view_inventory_summary") &&
+      !permissions.includes("view_report")
+    ) {
       return res.json({
         totalProducts: 0,
         totalQuantity: 0,
@@ -108,7 +122,14 @@ exports.orderStats = async (req, res) => {
 
   // Filter by user if not admin/staff
   const userRole = req.user?.role?.toLowerCase();
-  if (req.user && userRole !== "admin" && userRole !== "staff") {
+  const permissions = req.user?.permission?.permissions || [];
+
+  if (
+    req.user &&
+    userRole !== "admin" &&
+    userRole !== "staff" &&
+    !permissions.includes("view_order_stats")
+  ) {
     where.requester_id = req.user._id;
   }
 
@@ -142,7 +163,14 @@ exports.activityLogs = async (req, res) => {
     const where = {};
     // Filter by user if not admin/staff
     const userRole = req.user?.role?.toLowerCase();
-    if (req.user && userRole !== "admin" && userRole !== "staff") {
+    const permissions = req.user?.permission?.permissions || [];
+
+    if (
+      req.user &&
+      userRole !== "admin" &&
+      userRole !== "staff" &&
+      !permissions.includes("view_activity_log")
+    ) {
       where.user_id = req.user._id;
     }
 
@@ -178,7 +206,14 @@ exports.activityLogs = async (req, res) => {
 exports.financialSummary = async (req, res) => {
   try {
     const userRole = req.user?.role?.toLowerCase();
-    if (req.user && userRole !== "admin" && userRole !== "staff") {
+    const permissions = req.user?.permission?.permissions || [];
+
+    if (
+      req.user &&
+      userRole !== "admin" &&
+      userRole !== "staff" &&
+      !permissions.includes("view_report")
+    ) {
       return res.json({
         success: true,
         data: {
