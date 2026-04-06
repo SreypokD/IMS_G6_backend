@@ -186,11 +186,30 @@ exports.create = async (req, res) => {
         user.permission.permissions.includes("update_approve_request"),
     );
 
+    // Build rich notification message from populated order items
+    const populatedItems = populated.items || [];
+    let notifMessage;
+    if (populatedItems.length > 0) {
+      const itemSummary = populatedItems
+        .map((item) => `${item.quantity}x ${item.product?.name || "item"}`)
+        .join(", ");
+      const supplierName = orderData.supplier_id
+        ? (
+            await require("../models/associations").Supplier?.findByPk(
+              orderData.supplier_id,
+            )
+          )?.company_name || ""
+        : "";
+      notifMessage = `${req.user.first_name} ${req.user.last_name} submitted a new purchase order request for ${itemSummary}${supplierName ? ` from ${supplierName}` : ""}.`;
+    } else {
+      notifMessage = `${req.user.first_name} ${req.user.last_name} submitted a new purchase order request.`;
+    }
+
     for (const staff of staffToNotify) {
       await Notification.create({
         user_id: staff._id,
         type: "new_order_request",
-        message: `New order request from ${req.user.first_name} ${req.user.last_name}`,
+        message: notifMessage,
         entity_type: "Order Request",
         entity_id: order._id,
         read: false,

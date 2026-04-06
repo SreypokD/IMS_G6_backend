@@ -51,6 +51,20 @@ exports.markRead = async (req, res) => {
   }
 };
 
+// Mark all notifications as read for current user
+exports.markAllRead = async (req, res) => {
+  try {
+    const user_id = req.user._id;
+    await Notification.update(
+      { read: true },
+      { where: { user_id, read: false } },
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
 // Get unread notification count
 exports.unreadCount = async (req, res) => {
   try {
