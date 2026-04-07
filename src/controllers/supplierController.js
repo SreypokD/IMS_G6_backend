@@ -78,11 +78,15 @@ exports.getAll = async (req, res) => {
 
 // Get a single supplier
 exports.getOne = async (req, res) => {
-  const supplier = await Supplier.findByPk(req.params.id, {
-    include: [{ model: Product, as: "products" }],
-  });
-  if (!supplier) return res.status(404).json({ error: "Not found" });
-  res.json({ success: true, data: supplier });
+  try {
+    const supplier = await Supplier.findByPk(req.params.id, {
+      include: [{ model: Product, as: "products" }],
+    });
+    if (!supplier) return res.status(404).json({ error: "Not found" });
+    res.json({ success: true, data: supplier });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 exports.create = async (req, res) => {

@@ -81,12 +81,13 @@ exports.getAll = async (req, res) => {
 
 // Get a single user
 exports.getOne = async (req, res) => {
-  const user = await User.findByPk(req.params.id, {
-    include: [{ model: Permission, as: "permission" }],
-  });
-  if (!user) return res.status(404).json({ error: "Not found" });
+  try {
+    const user = await User.findByPk(req.params.id, {
+      include: [{ model: Permission, as: "permission" }],
+    });
+    if (!user) return res.status(404).json({ error: "Not found" });
 
-  let userData = user.toJSON();
+    let userData = user.toJSON();
 
   // Parse address
   if (typeof userData.address === "string") {
@@ -107,6 +108,9 @@ exports.getOne = async (req, res) => {
   }
 
   res.json({ success: true, data: userData });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 // Create a user
@@ -282,6 +286,18 @@ exports.update = async (req, res) => {
       }
     }
     const previousStatus = user.status;
+
+    // Check for duplicate email if email is being changed
+    if (updateData.email && updateData.email !== user.email) {
+      const { Op } = require("sequelize");
+      const emailTaken = await User.findOne({
+        where: { email: updateData.email, _id: { [Op.ne]: req.params.id } },
+      });
+      if (emailTaken) {
+        return res.status(409).json({ success: false, error: "Email already in use by another user." });
+      }
+    }
+
     await user.update(updateData);
 
     // Send email notification if status changed from 'pending' to 'active'

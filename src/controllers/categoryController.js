@@ -47,7 +47,7 @@ exports.create = async (req, res) => {
     const category = await Category.create(req.body);
     res.status(201).json({ success: true, data: category });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 };
 
@@ -55,6 +55,20 @@ exports.update = async (req, res) => {
   try {
     const category = await Category.findByPk(req.params.id);
     if (!category) return res.status(404).json({ error: "Not found" });
+
+    // Check for duplicate name (excluding self)
+    if (req.body.name && req.body.name.trim()) {
+      const duplicate = await Category.findOne({
+        where: {
+          name: { [Op.like]: req.body.name.trim() },
+          _id: { [Op.ne]: req.params.id },
+        },
+      });
+      if (duplicate) {
+        return res.status(409).json({ success: false, error: `Category "${req.body.name}" already exists.` });
+      }
+    }
+
     await category.update(req.body);
     res.json({ success: true, data: category });
   } catch (err) {

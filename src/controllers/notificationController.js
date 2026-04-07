@@ -5,6 +5,9 @@ const Notification = require("../models/Notification");
 exports.create = async (req, res) => {
   try {
     const { user_id, type, message, entity_type, entity_id } = req.body;
+    if (!user_id || !type || !message) {
+      return res.status(422).json({ success: false, error: "user_id, type, and message are required." });
+    }
     const notification = await Notification.create({
       user_id,
       type,
@@ -15,7 +18,7 @@ exports.create = async (req, res) => {
     });
     res.status(201).json({ success: true, data: notification });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
@@ -31,7 +34,7 @@ exports.getAll = async (req, res) => {
     });
     res.json({ success: true, data: notifications });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
@@ -47,7 +50,7 @@ exports.markRead = async (req, res) => {
     await notification.save();
     res.json({ success: true, data: notification });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
@@ -61,7 +64,7 @@ exports.markAllRead = async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
@@ -72,6 +75,6 @@ exports.unreadCount = async (req, res) => {
     const count = await Notification.count({ where: { user_id, read: false } });
     res.json({ success: true, data: { count } });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 };

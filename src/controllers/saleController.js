@@ -187,12 +187,12 @@ exports.create = async (req, res) => {
   try {
     const { items, customer_id, payment_method, notes } = req.body;
 
-    // Normalize items
-    const salesItems = items && Array.isArray(items) ? items : [req.body];
-
-    if (!salesItems || salesItems.length === 0) {
-      throw new Error("No items provided");
+    // Normalize items — reject if not a valid array
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      await t.rollback();
+      return res.status(422).json({ success: false, error: "items array is required and must not be empty." });
     }
+    const salesItems = items;
 
     // 1. Create Sale Header
     const sale = await Sale.create(
@@ -263,6 +263,10 @@ exports.create = async (req, res) => {
     }
 
     // 3. Create SaleItems
+    if (saleItemsData.length === 0) {
+      await t.rollback();
+      return res.status(422).json({ success: false, error: "No valid items to process. Check product IDs and quantities." });
+    }
     await SaleItem.bulkCreate(saleItemsData, { transaction: t });
 
     // Update Sale with totals

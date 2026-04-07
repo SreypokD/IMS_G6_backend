@@ -51,15 +51,16 @@ exports.getOne = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { name } = req.body;
-    if (name) {
-      const existing = await Permission.findOne({
-        where: { name: { [Op.like]: name.trim() } },
-      });
-      if (existing) {
-        return res
-          .status(409)
-          .json({ error: `Role "${name}" already exists.` });
-      }
+    if (!name || !name.trim()) {
+      return res.status(422).json({ error: "Role name is required." });
+    }
+    const existing = await Permission.findOne({
+      where: { name: { [Op.like]: name.trim() } },
+    });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ error: `Role "${name}" already exists.` });
     }
     const permission = await Permission.create(req.body);
     res.status(201).json({ success: true, data: permission });
@@ -74,6 +75,21 @@ exports.update = async (req, res) => {
     const permission = await Permission.findByPk(req.params.id);
     if (!permission)
       return res.status(404).json({ error: "Permission not found" });
+
+    // Check for duplicate name (excluding self)
+    if (req.body.name && req.body.name.trim()) {
+      const duplicate = await Permission.findOne({
+        where: {
+          name: { [Op.like]: req.body.name.trim() },
+          _id: { [Op.ne]: req.params.id },
+        },
+      });
+      if (duplicate) {
+        return res
+          .status(409)
+          .json({ error: `Role "${req.body.name}" already exists.` });
+      }
+    }
     // Ensure permissions is always an array, not a string
     let updateData = { ...req.body };
     // Only process permissions if it exists in the update data

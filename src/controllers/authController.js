@@ -54,6 +54,13 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Check for duplicate email
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({ error: "An account with this email already exists." });
+    }
+
     // Always assign 'customer' role and customer permissions
     // Find or create the 'customer' permission
     // let customerPermission = await Permission.findOne({

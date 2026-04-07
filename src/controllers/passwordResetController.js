@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const { sendMail } = require("../utils/mail.util");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const { Op } = require("sequelize");
 
 // In-memory store for reset tokens (for demo; use DB in production)
@@ -35,7 +36,7 @@ exports.resetPassword = async (req, res) => {
     return res.status(400).json({ error: "Invalid or expired token" });
   const user = await User.findByPk(data.userId);
   if (!user) return res.status(404).json({ error: "User not found" });
-  user.password = password; // Hash in real app!
+  user.password = await bcrypt.hash(password, 10);
   await user.save();
   resetTokens.delete(token);
   res.json({ success: true, message: "Password reset successful" });

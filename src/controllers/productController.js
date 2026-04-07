@@ -66,14 +66,18 @@ exports.getAll = async (req, res) => {
 };
 
 exports.getOne = async (req, res) => {
-  const product = await Product.findByPk(req.params.id, {
-    include: [
-      { model: Category, as: "category" },
-      { model: Supplier, as: "supplier" },
-    ],
-  });
-  if (!product) return res.status(404).json({ error: "Not found" });
-  res.json({ success: true, data: product });
+  try {
+    const product = await Product.findByPk(req.params.id, {
+      include: [
+        { model: Category, as: "category" },
+        { model: Supplier, as: "supplier" },
+      ],
+    });
+    if (!product) return res.status(404).json({ error: "Not found" });
+    res.json({ success: true, data: product });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 exports.create = async (req, res) => {

@@ -69,6 +69,16 @@ exports.create = async (req, res) => {
   try {
     const { description, amount, category, date, receipt_image } = req.body;
 
+    if (!description || !description.trim()) {
+      return res.status(422).json({ success: false, error: "Description is required." });
+    }
+    if (amount === undefined || amount === null || isNaN(Number(amount)) || Number(amount) <= 0) {
+      return res.status(422).json({ success: false, error: "Amount must be a positive number." });
+    }
+    if (!category || !category.trim()) {
+      return res.status(422).json({ success: false, error: "Category is required." });
+    }
+
     const expense = await Expense.create({
       description,
       amount,

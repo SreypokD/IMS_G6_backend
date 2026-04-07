@@ -126,13 +126,14 @@ exports.create = async (req, res) => {
       newStock += addedQty;
     } else {
       const availableStock = product.stock - product.reserved_stock;
-      if (availableStock < quantity) {
+      const qty = Number(quantity);
+      if (availableStock < qty) {
         await transaction.rollback();
         return res.status(400).json({
           error: `Insufficient available stock (Reserved limit reached: ${product.reserved_stock})`,
         });
       }
-      newStock -= Number(quantity);
+      newStock -= qty;
     }
 
     updateData.stock = newStock;

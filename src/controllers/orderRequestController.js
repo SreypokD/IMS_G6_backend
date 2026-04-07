@@ -28,13 +28,6 @@ exports.getAll = async (req, res) => {
     // Allow status filter from query or route (for approve/confirm delivery)
     let status = req.query.status;
     if (req.status) status = req.status;
-    if (
-      arguments.length > 2 &&
-      typeof arguments[2] === "object" &&
-      arguments[2].status
-    ) {
-      status = arguments[2].status;
-    }
     const {
       supplier_id,
       requester_id,
@@ -143,6 +136,16 @@ exports.create = async (req, res) => {
   try {
     // Create the order request (without product_id)
     const { orderItems, ...orderData } = req.body;
+
+    if (!Array.isArray(orderItems) || orderItems.length === 0) {
+      return res
+        .status(422)
+        .json({
+          success: false,
+          error: "At least one order item is required.",
+        });
+    }
+
     const order = await OrderRequest.create({
       ...orderData,
       requester_id: req.user._id,
