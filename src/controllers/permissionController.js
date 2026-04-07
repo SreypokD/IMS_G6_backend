@@ -50,6 +50,17 @@ exports.getOne = async (req, res) => {
 // Create a permission
 exports.create = async (req, res) => {
   try {
+    const { name } = req.body;
+    if (name) {
+      const existing = await Permission.findOne({
+        where: { name: { [Op.like]: name.trim() } },
+      });
+      if (existing) {
+        return res
+          .status(409)
+          .json({ error: `Role "${name}" already exists.` });
+      }
+    }
     const permission = await Permission.create(req.body);
     res.status(201).json({ success: true, data: permission });
   } catch (err) {
