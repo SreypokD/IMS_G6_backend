@@ -5,6 +5,7 @@ const userController = require("../controllers/userController");
 const checkPermission = require("../middleware/checkPermission");
 const authenticateToken = require("../middleware/auth");
 
+router.get("/customers", authenticateToken, userController.getCustomers);
 router.get("/", authenticateToken, checkPermission("view_user"), userController.getAll);
 router.post("/", authenticateToken, checkPermission("create_user"), userController.create);
 router.put("/profile", authenticateToken, userController.updateProfile);

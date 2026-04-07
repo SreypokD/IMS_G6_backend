@@ -443,3 +443,17 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
+// Get all active external customers (for sale modal - no view_user permission required)
+exports.getCustomers = async (req, res) => {
+  try {
+    const customers = await User.findAll({
+      where: { user_type: "external", status: "active" },
+      attributes: ["_id", "first_name", "last_name", "email", "phone"],
+      order: [["first_name", "ASC"]],
+    });
+    res.json({ success: true, data: customers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
