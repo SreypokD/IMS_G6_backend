@@ -895,12 +895,16 @@ exports.confirmDelivery = async (req, res) => {
         <p>Thank you for using our Inventory Management System.</p>
         <p>Best regards,<br/>Inventory Management Team<br/>${companyName}</p>
       `;
-      await sendMail({
-        to: requester.email,
-        subject: "Order Request Delivered",
-        text: `Dear ${requester.first_name + " " + requester.last_name},\n\nYour order request (Order ID: ${order._id}) has been delivered.\n\nOrder Details:\n${productLines}\nDelivery Date: ${deliveryDate}\n\nIf you have any questions, please contact us.\n\nThank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
-        html,
-      });
+      try {
+        await sendMail({
+          to: requester.email,
+          subject: "Order Request Delivered",
+          text: `Dear ${requester.first_name + " " + requester.last_name},\n\nYour order request (Order ID: ${order._id}) has been delivered.\n\nOrder Details:\n${productLines}\nDelivery Date: ${deliveryDate}\n\nIf you have any questions, please contact us.\n\nThank you for using our Inventory Management System.\n\nBest regards,\nInventory Management Team\n${companyName}`,
+          html,
+        });
+      } catch (emailErr) {
+        console.error("Failed to send delivery confirmation email:", emailErr);
+      }
     }
     const populatedOrder = await OrderRequest.findByPk(order._id, {
       include: [
