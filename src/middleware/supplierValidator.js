@@ -10,7 +10,6 @@ const validateSupplier = [
   body('contact_email').optional({ nullable: true }).isString().trim(),
   body('contact_phone').isString().trim().notEmpty().withMessage('Contact phone is required'),
   body('address').isObject().withMessage('Address is required'),
-  body('payment_term').isString().trim().notEmpty().withMessage('Payment term is required'),
   body('status').isString().trim().notEmpty().withMessage('Status is required'),
 ];
 

@@ -17,7 +17,6 @@ const Supplier = sequelize.define(
     contact_email: { type: DataTypes.STRING, allowNull: true },
     contact_phone: { type: DataTypes.STRING, allowNull: false },
     address: { type: DataTypes.JSON, allowNull: true },
-    payment_term: { type: DataTypes.STRING, allowNull: false },
     status: { type: DataTypes.STRING, allowNull: false, defaultValue: "active" },
   },
   { timestamps: true, tableName: "suppliers" },

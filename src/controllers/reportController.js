@@ -18,10 +18,10 @@ exports.trends = async (req, res) => {
     const userRole = req.user?.role?.toLowerCase();
     const permissions = req.user?.permission?.permissions || [];
 
+    const allowedRolesForTrends = ["admin", "staff", "stockkeeper"];
     if (
       req.user &&
-      userRole !== "admin" &&
-      userRole !== "staff" &&
+      !allowedRolesForTrends.includes(userRole) &&
       !permissions.includes("view_report")
     ) {
       return res.json({ success: true, data: [] });
@@ -124,10 +124,10 @@ exports.orderStats = async (req, res) => {
   const userRole = req.user?.role?.toLowerCase();
   const permissions = req.user?.permission?.permissions || [];
 
+  const allowedRolesForOrderStats = ["admin", "staff", "stockkeeper"];
   if (
     req.user &&
-    userRole !== "admin" &&
-    userRole !== "staff" &&
+    !allowedRolesForOrderStats.includes(userRole) &&
     !permissions.includes("view_order_stats")
   ) {
     where.requester_id = req.user._id;
@@ -165,10 +165,10 @@ exports.activityLogs = async (req, res) => {
     const userRole = req.user?.role?.toLowerCase();
     const permissions = req.user?.permission?.permissions || [];
 
+    const allowedRolesForActivity = ["admin", "staff", "stockkeeper"];
     if (
       req.user &&
-      userRole !== "admin" &&
-      userRole !== "staff" &&
+      !allowedRolesForActivity.includes(userRole) &&
       !permissions.includes("view_activity_log")
     ) {
       where.user_id = req.user._id;
