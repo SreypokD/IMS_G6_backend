@@ -9,7 +9,7 @@ exports.getAll = async (req, res) => {
     let page = parseInt(req.query.page, 10) || 1;
     let limit = parseInt(req.query.limit, 10) || 10;
     if (limit === -1) {
-      limit = 100000;
+      limit = 1000;
       page = 1;
     }
     const offset = (page - 1) * limit;

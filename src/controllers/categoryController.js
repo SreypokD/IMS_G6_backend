@@ -9,7 +9,7 @@ exports.getAll = async (req, res) => {
     const search = req.query.search || "";
     const status = req.query.status || "";
     if (limit === -1) {
-      limit = 100000;
+      limit = 1000;
       page = 1;
     }
     const offset = (page - 1) * limit;

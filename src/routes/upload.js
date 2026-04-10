@@ -2,8 +2,24 @@ const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
+
+// Optional auth — attaches req.user if a valid token is present, but does NOT block unauthenticated requests.
+// This allows guests (e.g. during registration) to upload documents while still identifying logged-in users.
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+      if (!err) req.user = user;
+      next();
+    });
+  } else {
+    next();
+  }
+}
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, "../../public/uploads");
@@ -22,9 +38,9 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5 MB max
 
-router.post("/", upload.single("file"), (req, res) => {
+router.post("/", optionalAuth, upload.single("file"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }

@@ -160,3 +160,18 @@ async function startServer() {
 }
 
 startServer();
+
+// Global 404 handler
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: "Route not found" });
+});
+
+// Global error handler — prevents stack traces leaking to clients
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+  console.error("Unhandled error:", err);
+  res.status(500).json({ success: false, error: "Internal server error" });
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
