@@ -589,8 +589,8 @@ async function seed() {
     email: "staff@example.com",
     password,
     role: "staff",
-    first_name: "Lyden",
-    last_name: "CHAI",
+    first_name: "Lina",
+    last_name: "Chea",
     phone: "096 765 432",
     address: {
       street: "Street 271",
@@ -632,8 +632,8 @@ async function seed() {
     email: "manager@example.com",
     password,
     role: "manager",
-    first_name: "Sopheap",
-    last_name: "SOK",
+    first_name: "Veasna",
+    last_name: "Chorn",
     phone: "015 998 776",
     address: {
       street: "Veng Sreng Blvd",
@@ -653,8 +653,8 @@ async function seed() {
     email: "stockkeeper@example.com",
     password,
     role: "stockkeeper",
-    first_name: "Piseth",
-    last_name: "MEAS",
+    first_name: "Chorpor",
+    last_name: "Chhem",
     phone: "088 112 233",
     address: {
       street: "Russian Blvd",
@@ -674,8 +674,8 @@ async function seed() {
     email: "finance@example.com",
     password,
     role: "finance",
-    first_name: "Vanna",
-    last_name: "CHENG",
+    first_name: "Sithet",
+    last_name: "Thy",
     phone: "012 990 088",
     address: {
       street: "Charles de Gaulle Blvd",
