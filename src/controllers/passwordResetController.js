@@ -18,12 +18,17 @@ exports.requestReset = async (req, res) => {
     expires: Date.now() + 1000 * 60 * 15,
   });
   const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password?token=${token}`;
-  await sendMail({
-    to: user.email,
-    subject: "Password Reset Request",
-    text: `Reset your password: ${resetUrl}`,
-    html: `<p>Click <a href='${resetUrl}'>here</a> to reset your password. This link expires in 15 minutes.</p>`,
-  });
+  try {
+    await sendMail({
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `Reset your password: ${resetUrl}`,
+      html: `<p>Click <a href='${resetUrl}'>here</a> to reset your password. This link expires in 15 minutes.</p>`,
+    });
+  } catch (emailErr) {
+    console.error("Failed to send password reset email:", emailErr);
+    return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again later." });
+  }
   res.json({ success: true, message: "Password reset email sent" });
 };
 
