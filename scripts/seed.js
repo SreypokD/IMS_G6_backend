@@ -600,7 +600,7 @@ async function seed() {
       district: "Chamkar Mon",
       province: "Phnom Penh",
     },
-    profile: "https://avatars.githubusercontent.com/u/74000032?v=4",
+    profile: null,
     permission_id: staffPermission._id,
     user_type: "internal",
   });
